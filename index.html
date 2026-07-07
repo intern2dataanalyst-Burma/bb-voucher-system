@@ -613,44 +613,53 @@ async function apiCall(action, payload) {
     });
 
     el('btnSubmit').addEventListener('click', async () => {
+      clearError();
+      el('btnSubmit').disabled = true;
+      el('btnSubmit').textContent = 'Validating...';
+
+      // 1. Build & Validate the payload (this was missing entirely before — fixed)
+      let payload;
       try {
-        clearError();
-        el('btnSubmit').disabled = true;
-        el('btnSubmit').textContent = 'Validating...';
-        
-        // 1. Build & Validate the payload
-      // 1. Set loading state before the API call
-el('btnSubmit').textContent = 'Submitting...';
-el('btnSubmit').disabled = true;
+        payload = await buildPayload_();
+      } catch (e) {
+        showError(e.message || String(e));
+        el('btnSubmit').disabled = false;
+        el('btnSubmit').textContent = 'Submit Voucher';
+        return;
+      }
 
-// 2. Dynamically determine the endpoint route
-const action = (typeof PREFILL !== 'undefined' && PREFILL && PREFILL.sourceRequestId) 
-  ? 'resubmitVoucher' 
-  : 'submitVoucher';
+      // 2. Set loading state before the API call
+      el('btnSubmit').textContent = 'Submitting...';
+      el('btnSubmit').disabled = true;
 
-// 3. Send to Backend
-apiCall(action, payload)
-  .then(res => {
-    if (res && res.success !== false) {
-      el('formSection').style.display = 'none';
-      el('thankYou').style.display = 'block';
-      el('voucherNo').textContent = res.voucherNo || '';
-      el('approverInfo').textContent = `${res.approverName || ''} (${res.approverEmail || ''})`;
-      el('folderUrl').href = res.folderUrl || '#';
-    } else {
-      showError(res.error || 'An unexpected error occurred.');
-    }
-    
-    el('btnSubmit').disabled = false;
-    el('btnSubmit').textContent = 'Submit Voucher';
-  })
-  .catch(e => {
-    console.error('SUBMIT ERROR:', e); // ✅ Added back for easier debugging
-    showError(e.message || String(e));
-    
-    el('btnSubmit').disabled = false;
-    el('btnSubmit').textContent = 'Submit Voucher';
-    });
+      // 3. Dynamically determine the endpoint route
+      const action = (typeof PREFILL !== 'undefined' && PREFILL && PREFILL.sourceRequestId)
+        ? 'resubmitVoucher'
+        : 'submitVoucher';
+
+      // 4. Send to Backend
+      apiCall(action, payload)
+        .then(res => {
+          if (res && res.success !== false) {
+            el('formSection').style.display = 'none';
+            el('thankYou').style.display = 'block';
+            el('voucherNo').textContent = res.voucherNo || '';
+            el('approverInfo').textContent = `${res.approverName || ''} (${res.approverEmail || ''})`;
+            el('folderUrl').href = res.folderUrl || '#';
+          } else {
+            showError(res.error || 'An unexpected error occurred.');
+          }
+
+          el('btnSubmit').disabled = false;
+          el('btnSubmit').textContent = 'Submit Voucher';
+        })
+        .catch(e => {
+          console.error('SUBMIT ERROR:', e); // ✅ debugging retained
+          showError(e.message || String(e));
+
+          el('btnSubmit').disabled = false;
+          el('btnSubmit').textContent = 'Submit Voucher';
+        });
     });
   }
 
