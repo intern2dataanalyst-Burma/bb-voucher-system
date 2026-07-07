@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Reject Voucher</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body{background:radial-gradient(circle at top,#ffffff 0,#f3f6fb 45%,#e5edf7 100%);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    .card-ui{border-radius:18px;border:1px solid #e5e7eb;box-shadow:0 18px 45px rgba(15,23,42,.08);background:#fff;}
+    .page-title{font-weight:900;font-size:1.6rem;color:#b91c1c;margin:0;}
+    .subtitle{color:#6b7280;font-size:.95rem;}
+    .form-label{font-size:.9rem;font-weight:700;color:#111827;}
+    .form-control{border-radius:.75rem;border-color:#e5e7eb;background-color:#f9fafb;font-size:.95rem;padding:.75rem .9rem;}
+    .form-control:focus{border-color:#ef4444;box-shadow:0 0 0 .15rem rgba(239,68,68,.25);background-color:#fff;}
+    .btn-danger-pill{border-radius:999px;font-weight:800;padding:.7rem 1.2rem;box-shadow:0 12px 30px rgba(220,38,38,.20);}
+    .btn-outline-pill{border-radius:999px;font-weight:700;padding:.7rem 1.2rem;}
+    .hint{color:#6b7280;font-size:.85rem;}
+    .top-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#fff1f2;border:1px solid #fecaca;color:#9f1239;font-weight:800;font-size:.85rem;}
+    .success-icon{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle,#f87171 0,#ef4444 45%,#b91c1c 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 18px 40px rgba(239,68,68,.35);margin:0 auto 1rem;}
+  </style>
+</head>
+<body>
+  <div class="container py-4 py-md-5" style="max-width:760px;">
+    <div class="text-center mb-3">
+      <div class="top-badge">❌ Reject Voucher</div>
+    </div>
+    <div class="card card-ui">
+      <div class="card-body p-4 p-md-5">
+
+        <div id="screenForm">
+          <h1 class="page-title mb-2">Rejection Reason Required</h1>
+          <div class="subtitle mb-4">Please mention the exact issue so the requester can correct and resubmit quickly.</div>
+          <div id="alert" class="alert alert-danger" style="display:none;"></div>
+          <label for="reason" class="form-label">Reason <span class="text-danger">*</span></label>
+          <textarea id="reason" class="form-control" rows="5" placeholder="Example: Bills missing / wrong unit / category mismatch / Omni username required..."></textarea>
+          <div class="hint mt-2">Tip: Be specific. This reason will be emailed to the requester.</div>
+          <div class="mt-4 d-flex gap-2 flex-wrap">
+            <button id="btnReject" class="btn btn-danger btn-danger-pill">Submit Rejection</button>
+            <button id="btnClear"  class="btn btn-outline-secondary btn-outline-pill" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div id="screenDone" style="display:none;" class="text-center">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="42" height="42">
+              <circle cx="12" cy="12" r="10" stroke="white" stroke-width="1.5"></circle>
+              <path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+          </div>
+          <h3 style="font-weight:900;color:#111827;margin-bottom:8px;">Rejection Submitted</h3>
+          <p class="subtitle mb-0">The requester will receive an email with your reason and a resubmit link.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
+
+async function apiCall(action, payload) {
+  const response = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  });
+  if (!response.ok) throw new Error(`Server error (${response.status})`);
+  return await response.json(); // return the raw body — matches what every dashboard already checks (.success, .error, .message, or a raw array)
+}
+
+    // FIX: rid and token are injected server-side by the template; never exposed to manipulation
+   // ✅ FIX: Extract rid and token from the URL bar instead of Google Apps Script tags
+const urlParams = new URLSearchParams(window.location.search);
+const rid   = urlParams.get('rid') || '';
+const token = urlParams.get('token') || '';
+
+// Utility functions perfectly preserved
+const el       = id => document.getElementById(id);
+const showErr  = m  => { el('alert').textContent = m; el('alert').style.display = 'block'; };
+const clearErr = () => { el('alert').textContent = ''; el('alert').style.display = 'none'; };
+
+el('btnClear').addEventListener('click', () => { 
+  clearErr(); 
+  el('reason').value = ''; 
+  el('reason').focus(); 
+});
+
+// Your perfectly converted apiCall logic
+el('btnReject').addEventListener('click', () => {
+  clearErr();
+  const reason = el('reason').value.trim();
+  if (!reason) return showErr('Rejection reason is required.');
+
+  el('btnReject').disabled = true;
+  el('btnReject').textContent = 'Submitting...';
+
+  apiCall('rejectVoucher', { rid, token, reason })
+    .then(res => {
+      if (res && res.success !== false) {
+        el('screenForm').style.display = 'none';
+        el('screenDone').style.display = 'block';
+      } else {
+        showErr(res.error || 'Rejection failed');
+        el('btnReject').disabled = false;
+        el('btnReject').textContent = 'Submit Rejection';
+      }
+    })
+    .catch(err => {
+      showErr(err.message || String(err));
+      el('btnReject').disabled = false;
+      el('btnReject').textContent = 'Submit Rejection';
+    });
+});
+  </script>
+</body>
+</html>

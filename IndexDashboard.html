@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Master Index Dashboard — Burma Burma</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root { --primary:#01696f; --primary-hover:#0c4e54; --accent:#1d9bf0; --success:#16a34a; --warning:#d97706; --danger:#dc2626; --bg:#f7f6f2; --surface:#fff; --border:#e5e7eb; --text:#111827; --muted:#6b7280; }
+  body { background: var(--bg); font-family: system-ui,-apple-system,'Segoe UI',sans-serif; color: var(--text); }
+  .bb-logo { width:60px; height:60px; border-radius:50%; object-fit:cover; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+  .page-card { background:var(--surface); border-radius:20px; border:1px solid var(--border); box-shadow:0 8px 32px rgba(15,23,42,.07); }
+  .page-title { font-weight:800; font-size:1.55rem; color:#1d4ed8; }
+  
+  /* Status Badges */
+  .badge-status { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:700; text-transform:capitalize; white-space:nowrap; }
+  .status-paid { background:#dcfce7; color:#15803d; }
+  .status-approved { background:#dbeafe; color:#1d4ed8; }
+  .status-completed { background:#dbeafe; color:#1d4ed8; }
+  .status-waiting { background:#fef9c3; color:#92400e; }
+  .status-pending { background:#fef9c3; color:#92400e; }
+  .status-pending-approval { background:#ffdfd6; color:#b91c1c; }
+  .status-approve-pending { background:#ffdfd6; color:#b91c1c; }
+  .status-rejected { background:#fee2e2; color:#b91c1c; }
+  .status-default { background:#f3f4f6; color:#6b7280; }
+  .status-pending-invoice { background:#fff3cd; color:#856404; }
+  
+  /* Form Controls */
+  .form-control, .form-select { border-radius:10px; border-color:var(--border); background:#f9fafb; font-size:.9rem; padding:.6rem .9rem; }
+  .form-control:focus, .form-select:focus { border-color:var(--accent); box-shadow:0 0 0 .15rem rgba(29,155,240,.25); background:#fff; }
+  
+  /* Table Styles */
+  table { width:100%; border-collapse:collapse; font-size:.875rem; }
+  thead th { background:#f9fafb; font-weight:700; color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; padding:.75rem .9rem; border-bottom:2px solid var(--border); white-space:nowrap; }
+  tbody td { padding:.65rem .9rem; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:#f8fafc; }
+  .table-wrap { overflow-x:auto; border-radius:14px; border:1px solid var(--border); }
+  
+  /* Buttons */
+  .btn-primary-bb { background:linear-gradient(135deg,#1d9bf0,#01696f); border:none; color:#fff; font-weight:700; border-radius:999px; padding:.6rem 1.4rem; transition:box-shadow .2s; }
+  .btn-primary-bb:hover { box-shadow:0 8px 24px rgba(1,105,111,.3); color:#fff; }
+  .btn-outline-bb { background:none; border:1.5px solid var(--primary); color:var(--primary); font-weight:700; border-radius:999px; padding:.5rem 1.2rem; transition:all .2s; cursor:pointer; }
+  .btn-outline-bb:hover { background:var(--primary); color:#fff; }
+  
+  /* Layout */
+  .filter-bar { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
+  .skeleton { background:linear-gradient(90deg,#f3f4f6 25%,#e9ebee 50%,#f3f4f6 75%); background-size:200% 100%; animation:shimmer 1.5s ease infinite; border-radius:8px; height:44px; margin-bottom:8px; }
+  @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .empty-state svg { margin-bottom:.75rem; opacity:.35; }
+  
+  /* KPIs */
+  .kpi-row { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .kpi-card { flex:1 1 140px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.9rem 1.1rem; text-align:center; }
+  .kpi-val { font-size:1.5rem; font-weight:800; }
+  .kpi-lbl { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+
+  /* ================= PREMIUM MOBILE APP STYLES ================= */
+@media (max-width: 768px) {
+  body { padding: 50px 15px 40px 15px !important; background-color: #f7f6f2 !important; }
+  .d-flex.align-items-center.gap-3 { flex-direction: column !important; text-align: center !important; margin-bottom: 25px !important; width: 100% !important; }
+  .d-flex.align-items-center.gap-3 img { width: 75px !important; height: 75px !important; margin-bottom: 8px !important; }
+  .page-title { font-size: 26px !important; text-align: center !important; width: 100% !important; }
+  .page-card { border: none !important; box-shadow: 0 12px 35px rgba(0,0,0,0.08) !important; border-radius: 24px !important; padding: 25px 20px !important; margin-top: 10px !important; }
+  .filter-bar { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .filter-bar > div { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
+  .filter-bar .align-self-end { grid-column: span 2 !important; }
+  .filter-bar .form-control, .filter-bar .form-select { height: 44px !important; font-size: 14px !important; padding: 8px 12px !important; margin-bottom: 0 !important; }
+  .btn-primary-bb, .btn-outline-secondary { height: 52px !important; border-radius: 16px !important; font-size: 16px !important; font-weight: 800 !important; width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+  
+  /* Transform Table into Mobile Cards */
+  table, thead, tbody, th, td, tr { display: block !important; width: 100% !important; }
+  thead tr { display: none !important; }
+  tr { border: 1px solid #e5e7eb !important; border-radius: 16px !important; margin-bottom: 16px !important; padding: 12px 15px !important; background: #fff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
+  td { border: none !important; padding: 10px 0 !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-start !important; border-bottom: 1px solid #f3f4f6 !important; gap: 15px !important; }
+  td:last-child { border-bottom: none !important; justify-content: flex-end !important; }
+  td::before { content: attr(data-label); font-weight: 800 !important; color: #6b7280 !important; text-transform: uppercase !important; font-size: 0.75rem !important; flex-shrink: 0 !important; margin-top: 2px !important; }
+  td > div { max-width: 100% !important; white-space: normal !important; word-break: break-word !important; }
+  .badge-status { padding: 5px 12px !important; font-size: 0.8rem !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="container-fluid py-4 px-3 px-md-5" style="max-width: 1500px;">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <img src="https://drive.google.com/thumbnail?id=1OpUw3MCFGLRs7GQ4xezk5ouqYTvy6yv9&sz=w200" alt="Burma Burma Logo" class="bb-logo">
+      <div>
+        <div class="page-title">Master Voucher Index</div>
+        <div class="text-muted" style="font-size:.88rem;">Complete overview of all transactions and vouchers</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn-primary-bb" onclick="loadVouchers()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" class="me-1"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+        Refresh Data
+      </button>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card"><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-lbl">Total Records</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color:#92400e;" id="kpiMgrPending">—</div><div class="kpi-lbl">Mgr Pending</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color:#b91c1c;" id="kpiAccPending">—</div><div class="kpi-lbl">Acc Pending</div></div>
+    <div class="kpi-card"><div class="kpi-val" style="color:#15803d;" id="kpiCompleted">—</div><div class="kpi-lbl">Completed</div></div>
+  </div>
+
+  <div class="filter-bar mb-3 page-card p-3">
+    <div style="flex: 1 1 150px; max-width: 220px;">
+      <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Global Search</label>
+      <input type="text" id="globalFilter" class="form-control" placeholder="Search anything..." style="font-size:.85rem; padding:.45rem .6rem;" autocomplete="off">
+    </div>
+    <div style="flex: 1 1 150px; max-width: 220px;">
+      <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Search Employee/Paid To</label>
+      <input type="text" id="nameFilter" class="form-control" placeholder="Search Names..." list="nameOptionsList" style="font-size:.85rem; padding:.45rem .6rem;" autocomplete="off">
+      <datalist id="nameOptionsList"></datalist>
+    </div>
+    <div style="flex: 0 0 130px;">
+      <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">From Date</label>
+      <input type="date" id="fromDateFilter" class="form-control" style="font-size:.85rem; padding:.45rem .6rem;">
+    </div>
+    <div style="flex: 0 0 130px;">
+      <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">To Date</label>
+      <input type="date" id="toDateFilter" class="form-control" style="font-size:.85rem; padding:.45rem .6rem;">
+    </div>
+    <div style="flex: 0 0 130px;">
+      <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Month</label>
+      <select id="monthFilter" class="form-select" style="font-size:.85rem; padding:.45rem .6rem;"><option value="">All Months</option></select>
+    </div>
+    <div style="flex: 0 0 150px;">
+      <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Any Status</label>
+      <select id="statusFilter" class="form-select" style="font-size:.85rem; padding:.45rem .6rem;"><option value="">All Statuses</option></select>
+    </div>
+    <div class="align-self-end ms-auto">
+      <button class="btn btn-outline-secondary rounded-pill" style="font-size:.85rem; padding:.45rem 1rem;" onclick="clearFilters()">Clear</button>
+    </div>
+  </div>
+
+  <div id="skeletonLoader">
+    <div class="skeleton"></div>
+    <div class="skeleton" style="width:85%"></div>
+    <div class="skeleton" style="width:90%"></div>
+    <div class="skeleton" style="width:70%"></div>
+  </div>
+
+  <div id="voucherTableWrap" style="display:none;" class="table-wrap page-card mb-5">
+    <table>
+      <thead>
+        <tr>
+          <th>TXN ID</th>
+          <th>VOUCHER NO</th>
+          <th>EMPLOYEE</th>
+          <th>DATE</th>
+          <th>PAID TO</th>
+          <th>NOTES</th>
+          <th>AMOUNT</th>
+          <th>MANAGER STATUS</th>
+          <th>ACCOUNTS STATUS</th>
+          <th class="text-center">FINAL PDF</th>
+        </tr>
+      </thead>
+      <tbody id="voucherTableBody"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="empty-state page-card" style="display:none;">
+    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
+    <p class="fw-semibold mt-2 mb-1">No records found</p>
+    <p class="text-muted" style="font-size:.85rem;">Try adjusting your filters or clearing the search.</p>
+  </div>
+  
+  <div id="txCountInfo" class="mt-2 text-muted" style="font-size:.83rem;display:none;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
+
+async function apiCall(action, payload) {
+  const response = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  });
+  if (!response.ok) throw new Error(`Server error (${response.status})`);
+  return await response.json(); // return the raw body — matches what every dashboard already checks (.success, .error, .message, or a raw array)
+}
+
+  let allVouchers = [];
+  let filteredTxns = [];
+
+  const el = id => document.getElementById(id);
+  function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function fmtAmt(n) { return (Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  // Safe Date Parsing (Ensures dd/mm/yyyy visually, but allows logical comparison)
+  function formatDisplayDate(dateStr) {
+    if (!dateStr || dateStr === '—') return '—';
+    let dateOnly = String(dateStr).split(/[ T]/)[0];
+    let parts = dateOnly.split(/[-/]/);
+    if (parts.length === 3) {
+      if (parts[0].length === 4) return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      let n1 = parseInt(parts[0], 10), n2 = parseInt(parts[1], 10), yr = parts[2];
+      return (n2 > 12) ? `${String(n2).padStart(2, '0')}/${String(n1).padStart(2, '0')}/${yr}` : `${String(n1).padStart(2, '0')}/${String(n2).padStart(2, '0')}/${yr}`;
+    }
+    return dateOnly;
+  }
+
+  function parseDateForComparison(dateStr) {
+    if (!dateStr || dateStr === '—') return '';
+    const formatted = formatDisplayDate(dateStr);
+    const parts = formatted.split('/');
+    if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return dateStr;
+  }
+
+  function monthLabelFromDateStr(dateStr) {
+    if (!dateStr) return '';
+    const compDate = parseDateForComparison(dateStr);
+    const parts = compDate.split('-');
+    if (parts.length === 3) {
+      const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      if (!isNaN(d)) return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+    }
+    return '';
+  }
+
+  function statusBadge(status) {
+    let displayStatus = String(status||'').trim();
+    let cssStatus = displayStatus.toLowerCase().replace(/\s+/g,'-');
+    if (!displayStatus || displayStatus === '-') {
+      displayStatus = 'Pending';
+      cssStatus = 'approve-pending';
+    }
+    return `<span class="badge-status status-${cssStatus}">${escHtml(displayStatus)}</span>`;
+  }
+
+  function updateKPIs(rows) {
+    el('kpiTotal').textContent = rows.length;
+    el('kpiMgrPending').textContent = rows.filter(r => !r.status || r.status === '-' || r.status.toLowerCase().includes('pending')).length;
+    el('kpiAccPending').textContent = rows.filter(r => !r.accountsStatus || r.accountsStatus === '-' || r.accountsStatus.toLowerCase().includes('pending')).length;
+    el('kpiCompleted').textContent = rows.filter(r => (r.accountsStatus || '').toLowerCase() === 'completed' || (r.accountsStatus || '').toLowerCase() === 'processed').length;
+  }
+
+  function buildFilterOptions() {
+    // Build Names (Employee & Paid To)
+    const names = new Set();
+    const months = new Set();
+    const statuses = new Set();
+
+    allVouchers.forEach(v => {
+      if (v.employeeName && v.employeeName !== '—') names.add(String(v.employeeName).trim());
+      if (v.paidName && v.paidName !== '—') names.add(String(v.paidName).trim());
+      
+      const m = monthLabelFromDateStr(v.transactionDate || v.date);
+      if (m) months.add(m);
+
+      let mgrStat = String(v.status || '').trim();
+      let accStat = String(v.accountsStatus || '').trim();
+      if (!mgrStat || mgrStat === '-') mgrStat = 'Pending';
+      if (!accStat || accStat === '-') accStat = 'Pending';
+      statuses.add(mgrStat);
+      statuses.add(accStat);
+    });
+
+    el('nameOptionsList').innerHTML = Array.from(names).sort().map(n => `<option value="${escHtml(n)}">`).join('');
+    el('monthFilter').innerHTML = `<option value="">All Months</option>` + Array.from(months).map(m => `<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('');
+    el('statusFilter').innerHTML = `<option value="">All Statuses</option>` + Array.from(statuses).sort().map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+  }
+
+  function renderTable(rows) {
+    updateKPIs(rows);
+    
+    if (!rows.length) {
+      el('voucherTableWrap').style.display = 'none';
+      el('emptyState').style.display = 'block';
+      el('txCountInfo').style.display = 'none';
+      return;
+    }
+    
+    el('emptyState').style.display = 'none';
+    el('voucherTableWrap').style.display = 'block';
+    el('txCountInfo').style.display = 'block';
+    el('txCountInfo').textContent = `Showing ${rows.length} record${rows.length !== 1 ? 's' : ''}`;
+
+    el('voucherTableBody').innerHTML = rows.map((v, i)=> {
+      const displayMgrStatus = (!v.status || v.status === '-') ? 'Pending' : v.status;
+      const displayAccStatus = (!v.accountsStatus || v.accountsStatus === '-') ? 'Pending' : v.accountsStatus;
+      
+      let pdfCell = `<span style="color:var(--muted); font-size:0.75rem;">—</span>`;
+      if (v.pdfLink && v.pdfLink.trim() !== '') {
+        pdfCell = `<a href="${escHtml(v.pdfLink)}" target="_blank" class="badge-status status-completed" style="text-decoration:none;">📄 View PDF</a>`;
+      } else if (v.folderLink || v.folderUrl) {
+        pdfCell = `<a href="${escHtml(v.folderLink || v.folderUrl)}" target="_blank" style="font-size:0.75rem; text-decoration:none;">📂 Folder</a>`;
+      }
+
+      const notesCombined = [v.category, v.subCategory, v.notes].filter(Boolean).join(' - ') || '—';
+
+      return `<tr data-idx="${i}">
+        <td data-label="TXN ID"><div style="font-weight:700; text-align:right;">${escHtml(v.transactionId || v.omniTransactionId || '—')}</div></td>
+        <td data-label="VOUCHER NO"><div style="font-weight:700; color:var(--primary); text-align:right;">${escHtml(v.voucherNo || '—')}</div></td>
+        <td data-label="EMPLOYEE">
+          <div style="font-weight:700; text-align:right;">${escHtml(v.employeeName || '—')}</div>
+          <div style="font-size:.75rem; color:var(--muted); text-align:right;">${escHtml(v.employeeId || v.empId || '—')}</div>
+        </td>
+        <td data-label="DATE"><div style="text-align:right; font-size:.85rem;">${escHtml(formatDisplayDate(v.transactionDate || v.date))}</div></td>
+        <td data-label="PAID TO"><div style="font-weight:600; text-align:right; white-space:normal; word-break:break-word;">${escHtml(v.paidName || v.recipientName || '—')}</div></td>
+        <td data-label="NOTES"><div style="text-align:right; white-space:normal; word-break:break-word; font-size:.85rem;" title="${escHtml(notesCombined)}">${escHtml(notesCombined)}</div></td>
+        <td data-label="AMOUNT"><div style="font-weight:800; color:#01696f; font-size:1.1rem; text-align:right;">₹${fmtAmt(v.amount)}</div></td>
+        <td data-label="MGR STATUS"><div style="text-align:right;">${statusBadge(displayMgrStatus)}</div></td>
+        <td data-label="ACC STATUS"><div style="text-align:right;">${statusBadge(displayAccStatus)}</div></td>
+        <td data-label="FINAL PDF" class="text-center"><div style="text-align:right;">${pdfCell}</div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function applyFilters() {
+    const globalSearch = el('globalFilter').value.trim().toLowerCase();
+    const nameSearch = el('nameFilter').value.trim().toLowerCase();
+    const status = el('statusFilter').value.toLowerCase();
+    const month = el('monthFilter').value;
+    const fromDate = el('fromDateFilter').value; 
+    const toDate = el('toDateFilter').value; 
+
+    filteredTxns = allVouchers.filter(v => {
+      const txnId = v.transactionId || v.omniTransactionId || '';
+      const empName = v.employeeName || '';
+      const pName = v.paidName || v.recipientName || '';
+      const combinedNotes = (v.category || '') + ' ' + (v.subCategory || '') + ' ' + (v.notes || '');
+
+      const searchTarget = String(txnId + ' ' + (v.voucherNo || '') + ' ' + empName + ' ' + (v.employeeId || v.empId || '') + ' ' + pName + ' ' + combinedNotes + ' ' + (v.amount || '')).toLowerCase();
+      
+      const mgrStat = (!v.status || v.status === '-') ? 'pending' : String(v.status).toLowerCase();
+      const accStat = (!v.accountsStatus || v.accountsStatus === '-') ? 'pending' : String(v.accountsStatus).toLowerCase();
+
+      const okGlobal = !globalSearch || searchTarget.includes(globalSearch);
+      const okName = !nameSearch || empName.toLowerCase().includes(nameSearch) || pName.toLowerCase().includes(nameSearch) || String(v.employeeId || v.empId || '').toLowerCase().includes(nameSearch);
+      const okStatus = !status || mgrStat === status || accStat === status;
+      const okMonth = !month || monthLabelFromDateStr(v.transactionDate || v.date) === month;
+
+      let okDate = true;
+      const compDate = parseDateForComparison(v.transactionDate || v.date);
+      if (fromDate && compDate < fromDate) okDate = false;
+      if (toDate && compDate > toDate) okDate = false;
+
+      return okGlobal && okName && okStatus && okMonth && okDate;
+    });
+
+    renderTable(filteredTxns);
+  }
+
+  function clearFilters() {
+    el('globalFilter').value = '';
+    el('nameFilter').value = '';
+    el('statusFilter').value = '';
+    el('monthFilter').value = '';
+    el('fromDateFilter').value = '';
+    el('toDateFilter').value = '';
+    filteredTxns = [...allVouchers];
+    renderTable(filteredTxns);
+  }
+
+ function loadVouchers() {
+  // Show loading skeleton and hide table/empty state before fetching
+  el('skeletonLoader').style.display = 'block';
+  el('voucherTableWrap').style.display = 'none';
+  el('emptyState').style.display = 'none';
+  
+  apiCall('getAllIndexVouchers')
+    .then(data => {
+      allVouchers = data || [];
+      filteredTxns = [...allVouchers];
+      
+      el('skeletonLoader').style.display = 'none';
+      buildFilterOptions();
+      renderTable(filteredTxns);
+      
+      // Retrigger filters if there are any cached values in inputs
+      if (el('globalFilter').value || el('nameFilter').value) applyFilters();
+    })
+    .catch(err => {
+      el('skeletonLoader').style.display = 'none';
+      console.error("Failed to load Index Data:", err);
+      alert("Failed to load data. See console for details.");
+    });
+ }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Bind all filters
+    const filterInputs = ['globalFilter', 'nameFilter', 'fromDateFilter', 'toDateFilter', 'monthFilter', 'statusFilter'];
+    filterInputs.forEach(id => {
+      const element = el(id);
+      if (element) {
+        const eventType = (id.includes('Filter') && !id.includes('month') && !id.includes('status')) ? 'input' : 'change';
+        element.addEventListener(eventType, applyFilters);
+      }
+    });
+
+    loadVouchers();
+  });
+</script>
+
+</body>
+</html>

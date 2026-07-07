@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8" />
+  <title>Burma Burma | Voucher System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #ffffff 0, #f3f6fb 45%, #e5edf7 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .bb-logo { width:130px; max-width:100%; height:auto; display:block; margin:0 auto 12px; filter:drop-shadow(0 8px 18px rgba(15,23,42,.18)); }
+    .page-title { font-weight:800; font-size:2.15rem; color:#1d4ed8; }
+    .page-subtitle { color:#6b7280; font-size:.95rem; }
+    .card-helpline { border-radius:18px; border:1px solid #e5e7eb; box-shadow:0 18px 45px rgba(15,23,42,.08); background:#fff; }
+    .form-label { font-size:.9rem; font-weight:600; color:#111827; }
+    .form-control, .form-select { border-radius:.75rem; border-color:#e5e7eb; background-color:#f9fafb; font-size:.9rem; padding:.65rem .9rem; }
+    .form-control:focus, .form-select:focus { border-color:#1d9bf0; box-shadow:0 0 0 .15rem rgba(29,155,240,.35); background-color:#fff; }
+    
+    .prefilled-field { background-color:#f0f9ff !important; border:2px solid #1d9bf0 !important; border-radius:.75rem; cursor:not-allowed; color:#111827; font-weight:600; }
+    .prefilled-field:disabled { background-color:#f0f9ff !important; color:#111827; opacity:1; }
+    .prefilled-field:focus { background-color:#f0f9ff !important; border:2px solid #1d9bf0 !important; box-shadow:0 0 0 .15rem rgba(29,155,240,.25); }
+    .prefilled-label { color:#1d9bf0; font-weight:700; font-size:.85rem; }
+    
+    .pill-header-omni { display: inline-flex; align-items: center; padding: .35rem .85rem; border-radius: .75rem; background-color: #f0f9ff !important; border: 2px solid #1d9bf0 !important; color: #111827; font-weight: 700; font-size: .85rem; }
+    .pill-header-live { display: inline-flex; align-items: center; padding: .4rem .9rem; border-radius: 999px; background-color: #f8fbff; border: 1px solid #bae6fd; color: #1d4ed8; font-weight: 700; font-size: .85rem; }
+
+    .btn-gradient { background:linear-gradient(to right,#1d9bf0,#34d399); border:none; color:#fff; font-weight:700; border-radius:999px; padding:.7rem 1.5rem; box-shadow:0 12px 30px rgba(37,99,235,.3); }
+    .btn-gradient:hover { box-shadow:0 14px 36px rgba(37,99,235,.35); transform:translateY(-1px); }
+    .muted { color:#6b7280; font-size:.85rem; }
+    .success-icon { width:72px; height:72px; border-radius:50%; background:radial-gradient(circle,#4ade80 0,#22c55e 45%,#16a34a 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 18px 40px rgba(34,197,94,.4); margin:0 auto 1rem; }
+    .file-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; margin:6px 6px 0 0; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-size:.85rem; color:#111827; }
+    .file-chip a { text-decoration:none; color:#1d4ed8; font-weight:600; }
+    .info-box { border:1px solid #e5e7eb; border-radius:14px; background:#fff; padding:12px; }
+    .mono { font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-weight:800; }
+    #fullScreenLoader { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,.95); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; }
+    .spinner-bb { border:4px solid #e5e7eb; border-top-color:#1d9bf0; border-radius:50%; animation:spin 1s linear infinite; width:45px; height:45px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (max-width:576px) { .page-title { font-size:1.85rem; } .bb-logo { width:115px; } .pill-header-omni, .pill-header-live { font-size:.8rem; } }
+  </style>
+</head>
+
+<body>
+<div id="fullScreenLoader" style="display:none;"></div>
+
+<div class="container py-4 py-md-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <div class="text-center mb-4">
+        <img src="https://drive.google.com/thumbnail?id=1OpUw3MCFGLRs7GQ4xezk5ouqYTvy6yv9&sz=w1000" alt="Burma Burma Logo" class="bb-logo">
+        <div class="page-title">Voucher System</div>
+        <div class="page-subtitle">Create voucher → upload bills → approver approves → PDF generated</div>
+      </div>
+
+      <div class="card card-helpline">
+        <div class="card-body p-4 p-md-5">
+
+          <div id="alertWrap" class="mb-3" style="display:none;">
+            <div id="alert" class="alert alert-danger mb-0"></div>
+          </div>
+
+          <div id="formSection">
+            <div class="row g-3">
+
+              <input type="hidden" id="transactionId" name="transactionId" />
+              <input type="hidden" id="transactionToken" name="transactionToken" />
+              <input type="hidden" id="sourceRequestId" name="sourceRequestId" />
+
+              <div class="col-md-4">
+                <label class="form-label" id="txDateLabel">Transaction Date</label>
+                <input type="date" id="transactionDate" class="form-control" />
+                <div class="muted mt-1">Voucher number resets monthly based on this date.</div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Payment Mode</label>
+                <select id="paymentMode" class="form-select">
+                  <option value="">Loading...</option>
+                </select>
+              </div>
+
+              <div class="col-md-4" id="omniWrap" style="display:none;">
+                <label class="form-label">Omni User Name <span class="text-danger">*</span></label>
+                <input type="text" id="omniUserName" class="form-control" list="omniUserList" placeholder="Omni User Name" autocomplete="off" />
+                <datalist id="omniUserList"></datalist>
+                <div class="muted mt-1">Mandatory only when Payment Mode is OmniCard.</div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" id="paidNameLabel">Paid To</label>
+                <input type="text" id="paidName" class="form-control" placeholder="Party / Vendor name" />
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Approver</label>
+                <select class="form-select" id="approver" required>
+                  <option value="">Select</option>
+                </select>
+                <div class="form-text">Approvers are loaded from Approvers sheet (Active = Yes).</div>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="category" required>
+                  <option value="">Select Category</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Sub Category</label>
+                <select class="form-select" id="subCategory" required>
+                  <option value="">Select Sub Category</option>
+                </select>
+              </div>
+
+              <div class="col-md-4 mb-3" id="subCategoryOtherWrap" style="display:none;">
+                <label class="form-label">Sub Category (Other)</label>
+                <input type="text" id="subCategoryOther" class="form-control" placeholder="Type sub category..." />
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Unit</label>
+                <select id="unit" class="form-select">
+                  <option value="">Loading...</option>
+                </select>
+              </div>
+
+              <div class="col-12 mt-3">
+                <div class="p-3 rounded-4" style="border:1px solid #e5e7eb;background:#fff;">
+                  
+                  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="fw-bold">Particulars</div>
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                      <div class="pill-header-omni" id="omniPill" style="display:none;">
+                        Omni: ₹<span id="omniBalanceValue">0.00</span>
+                      </div>
+                      <div class="pill-header-live">
+                        Live Total: ₹<span id="liveTotal">0.00</span>
+                        <span id="diffSpan" style="margin-left:4px; display:none;"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row g-2 align-items-end">
+                    <div class="col-md-8"><label class="form-label">Line 1 - Particular</label><input type="text" class="form-control part" data-i="1" placeholder="Particular 1" /></div>
+                    <div class="col-md-4"><label class="form-label">Line 1 - Amount</label><input type="text" class="form-control amt" data-i="1" inputmode="decimal" autocomplete="off" placeholder="0.00" /></div>
+                    <div class="col-md-8"><label class="form-label">Line 2 - Particular</label><input type="text" class="form-control part" data-i="2" placeholder="Particular 2" /></div>
+                    <div class="col-md-4"><label class="form-label">Line 2 - Amount</label><input type="text" class="form-control amt" data-i="2" inputmode="decimal" autocomplete="off" placeholder="0.00" /></div>
+                    <div class="col-md-8"><label class="form-label">Line 3 - Particular</label><input type="text" class="form-control part" data-i="3" placeholder="Particular 3" /></div>
+                    <div class="col-md-4"><label class="form-label">Line 3 - Amount</label><input type="text" class="form-control amt" data-i="3" inputmode="decimal" autocomplete="off" placeholder="0.00" /></div>
+                    <div class="col-md-8"><label class="form-label">Line 4 - Particular</label><input type="text" class="form-control part" data-i="4" placeholder="Particular 4" /></div>
+                    <div class="col-md-4"><label class="form-label">Line 4 - Amount</label><input type="text" class="form-control amt" data-i="4" inputmode="decimal" autocomplete="off" placeholder="0.00" /></div>
+                  </div>
+                  <div class="muted mt-2">Line 2–4 optional. Total auto-calculates from Amount fields.</div>
+                </div>
+              </div>
+
+              <div class="col-12 mt-3">
+                <div class="p-3 rounded-4" style="border:1px solid #e5e7eb;background:#fff;">
+                  <div class="fw-bold mb-2">Upload Bills (PDF / Word Documents)</div>
+                  <div class="muted mb-2">Only PDF, DOC, or DOCX files are accepted. Max <span id="maxMb">15</span> MB each. Bill 1 is compulsory; Bills 2–5 are optional.</div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Bill 1 <span class="text-danger">*</span></label>
+                    <input id="billFile1" type="file" class="form-control" accept=".pdf,.doc,.docx" />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Bill 2</label>
+                    <input id="billFile2" type="file" class="form-control" accept=".pdf,.doc,.docx" />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Bill 3</label>
+                    <input id="billFile3" type="file" class="form-control" accept=".pdf,.doc,.docx" />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Bill 4</label>
+                    <input id="billFile4" type="file" class="form-control" accept=".pdf,.doc,.docx" />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Bill 5</label>
+                    <input id="billFile5" type="file" class="form-control" accept=".pdf,.doc,.docx" />
+                  </div>
+
+                  <div id="fileList" class="mt-2 muted">No files selected.</div>
+
+                  <div id="existingBillsWrap" style="display:none;" class="mt-3">
+                    <div class="fw-bold">Previous Bills (from rejected voucher)</div>
+                    <div class="muted">Cannot auto-load into upload box, but we can copy them into new voucher folder automatically.</div>
+                    <div class="form-check mt-2">
+                      <input class="form-check-input" type="checkbox" id="includePreviousBills" checked>
+                      <label class="form-check-label" for="includePreviousBills">Include previous bills in the new voucher folder</label>
+                    </div>
+                    <div id="existingBillsList" class="mt-2"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 mt-4 d-flex justify-content-end">
+                <button id="btnSubmit" class="btn btn-gradient">Submit Voucher</button>
+              </div>
+
+            </div>
+          </div>
+
+          <div id="thankYou" style="display:none;" class="text-center">
+            <div class="success-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="48" height="48">
+                <circle cx="12" cy="12" r="10" stroke="white" stroke-width="1.5"></circle>
+                <path d="M7 13l3 3 7-7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+            <h3 style="font-weight:900;margin-bottom:6px;">Voucher Created!</h3>
+            <p class="muted mb-3">Your voucher has been submitted for approval.</p>
+            <div class="info-box mb-3 mx-auto" style="max-width:560px;">
+              <div class="muted">Voucher Number</div>
+              <div class="mono" style="font-size:1.1rem;" id="voucherNo"></div>
+              <div style="margin-top:12px;border-top:1px solid #e5e7eb;padding-top:12px;">
+                <div class="muted">Approver</div>
+                <div style="font-weight:700;" id="approverInfo"></div>
+              </div>
+            </div>
+            <a id="folderUrl" href="#" target="_blank" rel="noreferrer" class="btn btn-gradient" style="text-decoration:none;display:inline-block;">📁 Open Voucher Folder</a>
+            <div style="margin-top:12px;">
+              <button id="postSubmitBtn" onclick="goToDashboardAfterSubmit_()" class="btn btn-outline-secondary rounded-pill px-4">
+              + Dashboard
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
+
+async function apiCall(action, payload) {
+  const response = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  });
+  if (!response.ok) throw new Error(`Server error (${response.status})`);
+  return await response.json(); // return the raw body — matches what every dashboard already checks (.success, .error, .message, or a raw array)
+}
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const REQUEST_ID = urlParams.get('rid') || '';
+  let VOUCHER_APP_URL = '';
+  let INIT_DATA = null;
+  let PREFILL = null;
+  let OMNI_BALANCE = 0;
+  let globalCategoryMap = {};
+  let lines = [{ particular: '', amount: '' }];
+
+  const el = id => document.getElementById(id);
+  const escapeHtml = s => String(s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const showError = msg => { el('alertWrap').style.display='block'; el('alert').textContent=msg; };
+  const clearError = () => { el('alertWrap').style.display='none'; el('alert').textContent=''; };
+
+  function getVoucherAppUrlAsync_() {
+  if (VOUCHER_APP_URL) return Promise.resolve(VOUCHER_APP_URL);
+  
+  return apiCall('getVoucherAppUrl')
+    .then(url => url || '')
+    .catch(() => ''); // ✅ Added this back so it fails silently, just like the old code!
+  }
+
+ async function goToDashboardAfterSubmit_() {
+  const btn = el('postSubmitBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+  const rawBaseUrl = await getVoucherAppUrlAsync_();
+
+  if (btn) { btn.disabled = false; btn.textContent = '+ Dashboard'; }
+
+  if (!rawBaseUrl) {
+    alert('Could not determine dashboard URL. Please close this tab and reopen your dashboard manually.');
+    return;
+  }
+
+  // ✅ Route back to whichever dashboard the person came from
+  const returnAction = sessionStorage.getItem('voucherReturnAction') || 'employee';
+  const baseUrl = `${rawBaseUrl}?action=${encodeURIComponent(returnAction)}`;
+
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(baseUrl);
+    return;
+  }
+  try {
+    window.top.location.href = baseUrl;
+  } catch (e) {
+    window.open(baseUrl, '_top');
+  }
+ }
+
+  function toggleOmni() {
+    const mode = String(el('paymentMode').value || '').toUpperCase();
+    el('omniWrap').style.display = (mode === 'OMNICARD') ? 'block' : 'none';
+  }
+
+  function toggleSubCategoryOther() {
+    const subCat = String(el('subCategory').value || '').trim();
+    el('subCategoryOtherWrap').style.display = (subCat === 'Other') ? 'block' : 'none';
+  }
+
+  function calcTotal() {
+    const amts = document.querySelectorAll('.amt');
+    let total = 0;
+    amts.forEach(x => { total += Number(x.value || 0); });
+    el('liveTotal').textContent = total.toFixed(2);
+
+    if (OMNI_BALANCE > 0) {
+      el('omniPill').style.display = 'inline-flex';
+      el('omniBalanceValue').textContent = OMNI_BALANCE.toFixed(2);
+      
+      const diff = total - OMNI_BALANCE;
+      const diffSpan = el('diffSpan');
+      diffSpan.style.display = 'inline';
+      
+      if (Math.abs(diff) < 0.01) {
+        diffSpan.innerHTML = `(<span style="color:#16a34a">0.00</span>)`;
+      } else {
+        const sign = diff > 0 ? '+' : '';
+        diffSpan.innerHTML = `(<span style="color:#dc2626">${sign}${diff.toFixed(2)}</span>)`;
+      }
+    } else {
+      if(el('omniPill')) el('omniPill').style.display = 'none';
+      if(el('diffSpan')) el('diffSpan').style.display = 'none';
+    }
+    return total;
+  }
+
+  // ✅ NEW: renders selected filenames across the 5 separate Bill inputs
+  function renderFileList() {
+    const inputs = ['billFile1','billFile2','billFile3','billFile4','billFile5'].map(id => el(id));
+    const chips = [];
+    inputs.forEach((inp, idx) => {
+      if (inp && inp.files && inp.files.length) {
+        chips.push(`<span class="file-chip">Bill ${idx + 1}: ${escapeHtml(inp.files[0].name)}</span>`);
+      }
+    });
+    el('fileList').innerHTML = chips.length ? chips.join('') : 'No files selected.';
+  }
+
+  function lockPrefilled_(elem, label_id) {
+    if (!elem) return;
+    elem.classList.add('prefilled-field');
+    elem.readOnly = true;
+    elem.disabled = true;
+    if (label_id) {
+      const lbl = el(label_id);
+      if (lbl && !lbl.innerHTML.includes('(Prefilled)')) {
+        lbl.innerHTML = lbl.innerHTML + ' <span class="prefilled-label">(Prefilled)</span>';
+      }
+    }
+  }
+
+  function renderApproverOptions(approvers, prefillEmail, prefillName) {
+    const allOptions = approvers
+      .map(a => `<option value="${escapeHtml(a.email)}" data-name="${escapeHtml(a.name || a.email)}">${escapeHtml(a.name || a.email)}</option>`)
+      .join('');
+    el('approver').innerHTML = `<option value="">Select</option>${allOptions}`;
+    
+    let found = false;
+    
+    if (prefillEmail) {
+      const normalizedEmail = String(prefillEmail).trim().toLowerCase();
+      for (const approver of approvers) {
+        if (String(approver.email).trim().toLowerCase() === normalizedEmail) {
+          el('approver').value = approver.email;
+          found = true;
+          break;
+        }
+      }
+    }
+    
+    if (!found && prefillName) {
+      const normalizedName = String(prefillName).trim().toLowerCase();
+      for (const approver of approvers) {
+        if (String(approver.name).trim().toLowerCase() === normalizedName) {
+          el('approver').value = approver.email;
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found && (prefillEmail || prefillName)) {
+      const val = prefillEmail || prefillName;
+      const name = prefillName || prefillEmail;
+      el('approver').innerHTML += `<option value="${escapeHtml(val)}" data-name="${escapeHtml(name)}" selected>${escapeHtml(name)} (Inactive)</option>`;
+      el('approver').value = val;
+    }
+    
+    if (prefillEmail || prefillName) {
+      lockPrefilled_(el('approver'));
+    }
+  }
+
+  function rebuildSubCategory(category, prefillSubCat) {
+    const opts = globalCategoryMap[category] || [];
+    const html = `<option value="">Select Sub Category</option>` +
+      opts.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('') +
+      `<option value="Other">Other</option>`;
+    el('subCategory').innerHTML = html;
+    if (prefillSubCat) el('subCategory').value = prefillSubCat;
+    toggleSubCategoryOther();
+  }
+
+  function renderExistingBills(bills) {
+    el('existingBillsWrap').style.display = 'block';
+    el('existingBillsList').innerHTML = (bills || [])
+      .map((b, i) => `<span class="file-chip">${b.name.includes('.pdf') ? '📄' : '🖼️'} <a href="${b.url}" target="_blank" rel="noreferrer">${escapeHtml(b.name)}</a></span>`)
+      .join('');
+  }
+
+  async function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || '').split(',')[1] || '');
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function getLines() {
+    const lines = [];
+    for (let i = 1; i <= 4; i++) {
+      const part = document.querySelector(`.part[data-i="${i}"]`).value.trim();
+      const amt = Number(document.querySelector(`.amt[data-i="${i}"]`).value || 0);
+      lines.push({ particular: part, amount: amt });
+    }
+    return lines;
+  }
+
+  function setLines(lines) {
+    (lines || []).forEach((line, i) => {
+      if (i < 4) {
+        document.querySelector(`.part[data-i="${i+1}"]`).value = line.particular || '';
+        document.querySelector(`.amt[data-i="${i+1}"]`).value = line.amount || '';
+      }
+    });
+    calcTotal();
+  }
+
+      async function buildPayload_() {
+      // ✅ 1. EXPLICIT FRONTEND VALIDATION
+      const missing = [];
+      
+      const transDate = el('transactionDate') ? el('transactionDate').value.trim() : '';
+      const payMode = el('paymentMode') ? el('paymentMode').value.trim() : '';
+      const paidName = el('paidName') ? el('paidName').value.trim() : '';
+      const unit = el('unit') ? el('unit').value.trim() : '';
+      const category = el('category') ? el('category').value.trim() : '';
+      const approverEmail = el('approver') ? el('approver').value.trim() : '';
+      
+      if (!transDate) missing.push("Transaction Date");
+      if (!payMode) missing.push("Payment Mode");
+      if (!paidName) missing.push("Paid To (Name)");
+      if (!unit) missing.push("Unit");
+      if (!category) missing.push("Category");
+      if (!approverEmail) missing.push("Approver");
+
+      // If anything is missing, stop immediately and tell the user!
+      if (missing.length > 0) {
+        throw new Error("Missing required fields:\n• " + missing.join("\n• "));
+      }
+
+      // 2. Get line items & totals
+      const lines = typeof getLines === 'function' ? getLines() : [];
+      if (lines.length === 0) throw new Error("Please add at least one Particular/Line Item.");
+      
+      const total = typeof calcTotal === 'function' ? calcTotal() : 0;
+      if (total <= 0) throw new Error("Total amount must be greater than 0.");
+
+      // 3. Sub-Category logic
+      let subCat = '';
+      if (el('subCategory')) {
+        subCat = el('subCategory').value === 'Other' && el('subCategoryOther') 
+                 ? el('subCategoryOther').value.trim() 
+                 : el('subCategory').value.trim();
+      }
+
+      // 4. Balance checks
+      if (typeof OMNI_BALANCE !== 'undefined' && OMNI_BALANCE > 0) {
+        const diff = Math.abs(OMNI_BALANCE - total);
+        if (diff > 0.01) {
+          throw new Error(`Cannot submit: The Live Total (₹${total.toFixed(2)}) must exactly match the Omni Balance (₹${OMNI_BALANCE.toFixed(2)}).`);
+        }
+      }
+
+      // ✅ 5. File Processing (5 sequential Bill inputs → same encodedFiles array/shape as before)
+      const billInputIds = ['billFile1','billFile2','billFile3','billFile4','billFile5'];
+      const encodedFiles = [];
+
+      const bill1Input = el('billFile1');
+      const bill1HasFile = !!(bill1Input && bill1Input.files && bill1Input.files.length);
+      const isResubmitWithPrevBills = (typeof PREFILL !== 'undefined' && PREFILL && PREFILL.sourceRequestId
+        && el('includePreviousBills') && el('includePreviousBills').checked);
+
+      if (!bill1HasFile && !isResubmitWithPrevBills) {
+        throw new Error('Bill 1 is required. Please upload at least the first bill.');
+      }
+
+      // ✅ FIX: Restrict to PDF/DOC/DOCX only — images are explicitly blocked.
+      // Sequential array order (i + 1 prefix) is preserved exactly as before,
+      // so the merge-order guarantee is completely unaffected by this restriction.
+      const ALLOWED_MIME_TYPES = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
+
+      for (let i = 0; i < billInputIds.length; i++) {
+        const inp = el(billInputIds[i]);
+        if (!inp || !inp.files || !inp.files.length) continue; // skip empty optional bills
+        const f = inp.files[0];
+        const mime = f.type || '';
+        const nameLower = String(f.name || '').toLowerCase();
+        const extOk = ALLOWED_EXTENSIONS.some(ext => nameLower.endsWith(ext));
+        const mimeOk = ALLOWED_MIME_TYPES.includes(mime);
+        // Some browsers report blank/generic mime for .doc/.docx — trust extension too
+        const okType = mimeOk || extOk;
+        if (!okType) throw new Error(`Invalid file format (${f.name}). Only PDF, DOC, or DOCX files are allowed.`);
+        if (mime.startsWith('image/')) throw new Error(`Images are not allowed (${f.name}). Only PDF, DOC, or DOCX files are allowed.`);
+        const base64 = await toBase64(f);
+        const seqName = `${i + 1}_${f.name}`; // guarantees merge/Drive sort order
+        encodedFiles.push({ name: String(seqName), mimeType: String(mime), dataBase64: String(base64) });
+      }
+
+      const approverOpt = el('approver').options[el('approver').selectedIndex];
+      const approverName = approverOpt ? approverOpt.getAttribute('data-name') : '';
+      const omniName = el('omniUserName') ? el('omniUserName').value.trim() : '';
+
+      // ✅ 6. CLEAN PAYLOAD (Wrapped in String/Number to prevent "qo" crash)
+      const payload = {
+        transactionDate: String(transDate),
+        paymentMode: String(payMode),
+        omniUserName: String(omniName),
+        paidName: String(paidName),
+        unit: String(unit),
+        categoryFinal: String(category),
+        subCategory: String(subCat),
+        approverName: String(approverName),
+        approverEmail: String(approverEmail),
+        lines: lines, 
+        total: Number(total),
+        files: encodedFiles,
+        submittedBy: '', 
+        transactionId: (typeof PREFILL !== 'undefined' && PREFILL) ? String(PREFILL.transactionId || '') : '',
+        transactionToken: (typeof PREFILL !== 'undefined' && PREFILL) ? String(PREFILL.transactionToken || '') : '',
+        sourceRequestId: (typeof PREFILL !== 'undefined' && PREFILL) ? String(PREFILL.sourceRequestId || '') : '',
+        // ✅ NEW: carry the original Voucher Number through so the backend can preserve it on overwrite
+        sourceVoucherNumber: (typeof PREFILL !== 'undefined' && PREFILL) ? String(PREFILL.sourceVoucherNumber || '') : '',
+        includePreviousBills: (typeof PREFILL !== 'undefined' && PREFILL && el('includePreviousBills')) ? Boolean(el('includePreviousBills').checked) : false
+      };
+
+      // Strip out any accidental undefined values that crash Google Apps Script
+      return JSON.parse(JSON.stringify(payload)); 
+    }
+
+  function setToday_() {
+    const today = new Date();
+    el('transactionDate').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  }
+
+  function initForm() {
+    // ✅ FIX #1: Only default to today's date for brand-new vouchers.
+    // If PREFILL already supplied a transaction date (rejected/resubmit flow),
+    // applyPrefillData() has already set it — do NOT overwrite it here.
+    if (!(PREFILL && PREFILL.transactionDate)) {
+      setToday_();
+    }
+
+    document.querySelectorAll('.amt').forEach(x => {
+      x.addEventListener('input', () => {
+        let v = x.value || '';
+        v = v.replace(/[^0-9.]/g, '');
+        const fd = v.indexOf('.');
+        if (fd !== -1) {
+          v = v.slice(0, fd + 1) + v.slice(fd + 1).replace(/\./g, '');
+          const pts = v.split('.');
+          if (pts[1] && pts[1].length > 2) v = pts[0] + '.' + pts[1].slice(0, 2);
+        }
+        if (v !== x.value) x.value = v;
+        calcTotal();
+      });
+      x.addEventListener('wheel', () => { x.blur(); });
+    });
+
+    // ✅ NEW: bind change listeners to all 5 Bill inputs instead of the old single billFiles input
+    ['billFile1','billFile2','billFile3','billFile4','billFile5'].forEach(id => {
+      const inp = el(id);
+      if (inp) inp.addEventListener('change', renderFileList);
+    });
+
+    el('paymentMode').addEventListener('change', toggleOmni);
+    el('subCategory').addEventListener('change', toggleSubCategoryOther);
+    el('category').addEventListener('change', () => {
+      rebuildSubCategory(el('category').value, '');
+    });
+
+    el('btnSubmit').addEventListener('click', async () => {
+      try {
+        clearError();
+        el('btnSubmit').disabled = true;
+        el('btnSubmit').textContent = 'Validating...';
+        
+        // 1. Build & Validate the payload
+      // 1. Set loading state before the API call
+el('btnSubmit').textContent = 'Submitting...';
+el('btnSubmit').disabled = true;
+
+// 2. Dynamically determine the endpoint route
+const action = (typeof PREFILL !== 'undefined' && PREFILL && PREFILL.sourceRequestId) 
+  ? 'resubmitVoucher' 
+  : 'submitVoucher';
+
+// 3. Send to Backend
+apiCall(action, payload)
+  .then(res => {
+    if (res && res.success !== false) {
+      el('formSection').style.display = 'none';
+      el('thankYou').style.display = 'block';
+      el('voucherNo').textContent = res.voucherNo || '';
+      el('approverInfo').textContent = `${res.approverName || ''} (${res.approverEmail || ''})`;
+      el('folderUrl').href = res.folderUrl || '#';
+    } else {
+      showError(res.error || 'An unexpected error occurred.');
+    }
+    
+    el('btnSubmit').disabled = false;
+    el('btnSubmit').textContent = 'Submit Voucher';
+  })
+  .catch(e => {
+    console.error('SUBMIT ERROR:', e); // ✅ Added back for easier debugging
+    showError(e.message || String(e));
+    
+    el('btnSubmit').disabled = false;
+    el('btnSubmit').textContent = 'Submit Voucher';
+    });
+    });
+  }
+
+  function applyPrefillData() {
+    if (!PREFILL) return;
+
+    if (PREFILL.amount) {
+      OMNI_BALANCE = Number(PREFILL.amount);
+    }
+    
+    if (PREFILL.transactionDate) {
+      const d = new Date(PREFILL.transactionDate);
+      if (!isNaN(d)) {
+        const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        el('transactionDate').value = val;
+        lockPrefilled_(el('transactionDate'), 'txDateLabel');
+      }
+    }
+
+    if (PREFILL.paymentMode) {
+      el('paymentMode').value = PREFILL.paymentMode;
+      lockPrefilled_(el('paymentMode'));
+    }
+    
+    if (PREFILL.omniUserName) {
+      el('omniUserName').value = PREFILL.omniUserName;
+      lockPrefilled_(el('omniUserName'));
+      el('omniUserName').dispatchEvent(new Event('change'));
+    }
+
+    // ✅ FIX #2: Unit remains fully editable during resubmission (no lock)
+    if (PREFILL.unit) {
+      el('unit').value = PREFILL.unit;
+    }
+
+    if (PREFILL.paidName) {
+      el('paidName').value = PREFILL.paidName;
+      lockPrefilled_(el('paidName'), 'paidNameLabel');
+    }
+
+    // ✅ FIX #2: Category & Sub Category remain fully editable during resubmission (no lock)
+    if (PREFILL.category && PREFILL.category.trim() !== '') {
+      el('category').value = PREFILL.category;
+      rebuildSubCategory(PREFILL.category, ''); 
+      
+      if (PREFILL.subCategory) {
+        el('subCategory').value = PREFILL.subCategory;
+        if (el('subCategory').value !== PREFILL.subCategory) {
+          el('subCategory').value = 'Other';
+          if (el('subCategoryOther')) {
+            el('subCategoryOther').value = PREFILL.subCategory;
+            toggleSubCategoryOther();
+          }
+        }
+      }
+    }
+
+    if (PREFILL.approverEmail || PREFILL.approverName) {
+      if (INIT_DATA && INIT_DATA.approvers) {
+        renderApproverOptions(INIT_DATA.approvers, PREFILL.approverEmail, PREFILL.approverName);
+      }
+    }
+
+    if (el('transactionId')) el('transactionId').value = PREFILL.transactionId || '';
+    if (el('transactionToken')) el('transactionToken').value = PREFILL.transactionToken || '';
+    if (el('sourceRequestId')) el('sourceRequestId').value = PREFILL.sourceRequestId || '';
+
+    if (PREFILL.lines) setLines(PREFILL.lines);
+    if (PREFILL.existingFiles) renderExistingBills(PREFILL.existingFiles);
+
+    toggleOmni();
+    toggleSubCategoryOther();
+    calcTotal(); 
+  }
+
+  function startInitialization() {
+  el('fullScreenLoader').style.display = 'flex';
+  el('fullScreenLoader').innerHTML = '<div class="spinner-bb" style="width:45px; height:45px; border-width:4px;"></div><div style="margin-top:15px; font-weight:800; color:#01696f; font-size:1.1rem;">Loading Data...</div>';
+
+  apiCall('getInitData')
+    .then(dropdownData => {
+      INIT_DATA = dropdownData;
+      
+      // Note: Ensure your backend getInitData() function actually returns this variable!
+      if (dropdownData.voucherAppUrl) VOUCHER_APP_URL = dropdownData.voucherAppUrl; 
+
+      el('paymentMode').innerHTML = `<option value="">Select</option>` + (dropdownData.paymentModes||[]).map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+      el('unit').innerHTML = `<option value="">Select</option>` + (dropdownData.units||[]).map(u=>`<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+      
+      globalCategoryMap = dropdownData.categoryMap || {};
+      const catKeys = dropdownData.categoryList || Object.keys(globalCategoryMap);
+      el('category').innerHTML = `<option value="">Select Category</option>` + catKeys.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      
+      if(el('maxFiles')) el('maxFiles').textContent = dropdownData.maxFiles || 15;
+      if(el('maxMb')) el('maxMb').textContent = dropdownData.maxFileMb || 5;
+      
+      const dlOmni = el('omniUserList');
+      if(dlOmni && dropdownData.omniUsers) dlOmni.innerHTML = dropdownData.omniUsers.map(u => `<option value="${escapeHtml(u.name)}"></option>`).join('');
+      
+      renderApproverOptions(dropdownData.approvers || [], '', '');
+
+      // Handle Prefill / Edit Resubmissions
+      if (REQUEST_ID) {
+        apiCall('getVoucherByRequestId', { requestId: REQUEST_ID })
+          .then(prefillData => {
+            PREFILL = prefillData;
+            console.log("✅ Prefill fetched successfully:", PREFILL); // Restored for debugging
+            applyPrefillData();
+            el('fullScreenLoader').style.display = 'none';
+            initForm();
+          })
+          .catch(err => {
+            console.error('Prefill Error:', err);
+            el('fullScreenLoader').style.display = 'none';
+            initForm();
+          });
+      } else {
+        applyPrefillData();
+        el('fullScreenLoader').style.display = 'none';
+        initForm();
+      }
+    })
+    .catch(err => {
+      console.error('INIT ERROR:', err);
+      showError(err.message || JSON.stringify(err));
+      el('fullScreenLoader').style.display = 'none';
+    });
+    }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
+    });
+    startInitialization();
+  });
+</script>
+</body>
+</html>

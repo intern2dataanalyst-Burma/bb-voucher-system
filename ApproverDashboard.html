@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approver Dashboard — Burma Burma</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script>
+  const VOUCHERBASEURL = '<?= VOUCHERBASEURL ?>';
+  window.voucherBaseUrl = VOUCHERBASEURL;
+</script>
+<style>
+  :root { 
+    --primary:#01696f; 
+    --primary-hover:#0c4e54; 
+    --accent:#1d9bf0; 
+    --success:#16a34a; 
+    --warning:#d97706; 
+    --danger:#dc2626; 
+    --bg:#f7f6f2; 
+    --surface:#fff; 
+    --border:#e5e7eb; 
+    --text:#111827; 
+    --muted:#6b7280; 
+  }
+  body { 
+    background: var(--bg); 
+    font-family: system-ui,-apple-system,'Segoe UI',sans-serif; 
+    color: var(--text); 
+  }
+  .bb-logo { 
+    width:60px; 
+    height:60px; 
+    border-radius:50%; 
+    object-fit:cover; 
+    box-shadow:0 4px 16px rgba(0,0,0,.12); 
+  }
+  .page-card { 
+    background:var(--surface); 
+    border-radius:20px; 
+    border:1px solid var(--border); 
+    box-shadow:0 8px 32px rgba(15,23,42,.07); 
+  }
+  .page-title { 
+    font-weight:800; 
+    font-size:1.55rem; 
+    color:#1d4ed8; 
+  }
+  .badge-status { 
+    display:inline-block; 
+    padding:3px 10px; 
+    border-radius:999px; 
+    font-size:.75rem; 
+    font-weight:700; 
+    text-transform:capitalize; 
+    white-space: nowrap; 
+  }
+  .status-paid { background:#dcfce7; color:#15803d; }
+  .status-completed { background:#dcfce7; color:#15803d; }
+  .status-approved { background:#dbeafe; color:#1d4ed8; }
+  .status-pending-accounts-approval { background:#dbeafe; color:#1d4ed8; }
+  .status-waiting { background:#fef9c3; color:#92400e; }
+  .status-pending { background:#fef9c3; color:#92400e; }
+  .status-pending-approval {background: #ffdfd6;color: #b91c1c; }
+  .status-pending-manager-approval {background: #ffdfd6;color: #b91c1c; }
+  .status-rejected { background:#fee2e2; color:#b91c1c; }
+  .status-default { background:#f3f4f6; color:#6b7280; }
+  .status-pending-invoice { background:#fff3cd; color:#856404; }
+  
+  .login-card { 
+    width:min(92vw, 420px); 
+    background:#fff; 
+    border:1px solid var(--border); 
+    border-radius:20px; 
+    box-shadow:0 20px 60px rgba(15,23,42,.18); 
+    padding:22px; 
+  }
+  .form-control, .form-select { 
+    border-radius:10px; 
+    border-color:var(--border); 
+    background:#f9fafb; 
+    font-size:.9rem; 
+    padding:.6rem .9rem; 
+  }
+  .form-control:focus, .form-select:focus { 
+    border-color:var(--accent); 
+    box-shadow:0 0 0 .15rem rgba(29,155,240,.25); 
+    background:#fff; 
+  }
+  table { 
+    width:100%; 
+    border-collapse:collapse; 
+    font-size:.875rem; 
+  }
+  thead th { 
+    background:#f9fafb; 
+    font-weight:700; 
+    color:var(--muted); 
+    font-size:.78rem; 
+    text-transform:uppercase; 
+    letter-spacing:.04em; 
+    padding:.75rem .9rem; 
+    border-bottom:2px solid var(--border); 
+    white-space:nowrap; 
+  }
+  tbody td { 
+    padding:.65rem .9rem; 
+    border-bottom:1px solid #f3f4f6; 
+    vertical-align:middle; 
+  }
+  tbody tr:last-child td { 
+    border-bottom:none; 
+  }
+  tbody tr:hover { 
+    background:#f8fafc; 
+  }
+  .table-wrap { 
+    overflow-x:auto; 
+    border-radius:14px; 
+    border:1px solid var(--border); 
+  }
+  .action-btn { 
+    display:inline-flex; 
+    align-items:center; 
+    gap:5px; 
+    border:none; 
+    border-radius:999px; 
+    font-size:.78rem; 
+    font-weight:700; 
+    padding:5px 13px; 
+    cursor:pointer; 
+    transition:all .18s; 
+  }
+  .btn-approve { 
+    background:#dcfce7; 
+    color:#15803d; 
+  }
+  .btn-approve:hover { 
+    background:#16a34a; 
+    color:#fff; 
+    box-shadow:0 4px 12px rgba(22,163,74,.3); 
+  }
+  .btn-reject { 
+    background:#fee2e2; 
+    color:#b91c1c; 
+  }
+  .btn-reject:hover { 
+    background:#dc2626; 
+    color:#fff; 
+    box-shadow:0 4px 12px rgba(220,38,38,.3); 
+  }
+  
+  .btn-edit-icon {
+    background: #f8fafc; 
+    color: #475569; 
+    border: 1.5px solid #e2e8f0; 
+    border-radius: 8px; 
+    padding: 4px 8px; 
+    cursor: pointer; 
+    transition: all .2s;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-edit-icon:hover {
+    border-color: #cbd5e1; 
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+
+  .btn-primary-bb { 
+    background:linear-gradient(135deg,#1d9bf0,#01696f); 
+    border:none; 
+    color:#fff; 
+    font-weight:700; 
+    border-radius:999px; 
+    padding:.6rem 1.4rem; 
+    transition:box-shadow .2s; 
+  }
+  .btn-primary-bb:hover { 
+    box-shadow:0 8px 24px rgba(1,105,111,.3); 
+    color:#fff; 
+  }
+  .btn-outline-bb { background:none; border:1.5px solid var(--primary); color:var(--primary); font-weight:700; border-radius:999px; padding:.5rem 1.2rem; transition:all .2s; cursor:pointer; }
+  .btn-outline-bb:hover { background:var(--primary); color:#fff; }
+  
+  .acc-card { border:1.5px solid #dbeafe; border-radius:14px; padding:1rem 1.25rem; background:#f0f9ff; }
+  .acc-name { font-weight:800; font-size:1.1rem; }
+  .acc-meta { font-size:.85rem; color:var(--muted); }
+  
+  .dashboard-actions { display: flex; gap: 10px; align-items: center; }
+
+  .filter-bar { 
+    display:flex; 
+    gap:.75rem; 
+    flex-wrap:wrap; 
+    align-items:center; 
+  }
+  .skeleton { 
+    background:linear-gradient(90deg,#f3f4f6 25%,#e9ebee 50%,#f3f4f6 75%); 
+    background-size:200% 100%; 
+    animation:shimmer 1.5s ease infinite; 
+    border-radius:8px; 
+    height:44px; 
+    margin-bottom:8px; 
+  }
+  @keyframes shimmer { 
+    0% { background-position:-200% 0; } 
+    100% { background-position:200% 0; } 
+  }
+  .empty-state { 
+    text-align:center; 
+    padding:3rem 1rem; 
+    color:var(--muted); 
+  }
+  .empty-state svg { 
+    margin-bottom:.75rem; 
+    opacity:.35; 
+  }
+  .alert-custom { 
+    border-radius:12px; 
+    font-size:.9rem; 
+  }
+  .spinner-bb { 
+    width:20px; 
+    height:20px; 
+    border:3px solid #e5e7eb; 
+    border-top-color:var(--accent); 
+    border-radius:50%; 
+    animation:spin .7s linear infinite; 
+    display:inline-block; 
+    vertical-align:middle; 
+  }
+  @keyframes spin { 
+    to { transform:rotate(360deg); } 
+  }
+  .modal-card { 
+    border-radius: 20px; 
+    border: none; 
+    margin: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  }
+  .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+  }
+  .reject-input { 
+    border-radius:10px; 
+    border-color:#fca5a5; 
+  }
+  .reject-input:focus { 
+    border-color:#dc2626; 
+    box-shadow:0 0 0 .15rem rgba(220,38,38,.2); 
+  }
+  .kpi-row { 
+    display:flex; 
+    gap:1rem; 
+    flex-wrap:wrap; 
+    margin-bottom:1.25rem; 
+  }
+  .kpi-card { 
+    flex:1 1 140px; 
+    background:var(--surface); 
+    border:1px solid var(--border); 
+    border-radius:14px; 
+    padding:.9rem 1.1rem; 
+    text-align:center; 
+  }
+  .kpi-val { 
+    font-size:1.5rem; 
+    font-weight:800; 
+  }
+  .kpi-lbl { 
+    font-size:.75rem; 
+    color:var(--muted); 
+    text-transform:uppercase; 
+    letter-spacing:.04em; 
+    margin-top:2px; 
+  }
+  @media (max-width: 576px) { 
+    .page-title { font-size:1.25rem; } 
+    thead th, tbody td { padding:.5rem .5rem; font-size:.75rem; } 
+    .kpi-val { font-size:1.2rem; } 
+  }
+
+  .access-denied-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  .access-denied-overlay.show {
+    display: flex;
+  }
+  .access-denied-card {
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 90vw;
+  }
+  .access-denied-icon {
+    font-size: 72px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .access-denied-title {
+    color: #ef4444;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 15px 0;
+  }
+  .access-denied-text {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  .access-denied-subtext {
+    color: #9ca3af;
+    font-size: 13px;
+    margin-bottom: 30px;
+  }
+  .access-denied-button {
+    background: linear-gradient(135deg, #1d9bf0, #01696f);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: box-shadow 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .access-denied-button:hover {
+    box-shadow: 0 8px 24px rgba(1, 105, 111, 0.3);
+    color: white;
+  }
+
+/* ================= PREMIUM MOBILE APP STYLES ================= */
+@media (max-width: 768px) {
+  body { padding: 50px 15px 40px 15px !important; background-color: #f7f6f2 !important; }
+  .d-flex.align-items-center.gap-3 { flex-direction: column !important; text-align: center !important; margin-bottom: 25px !important; width: 100% !important; }
+  .d-flex.align-items-center.gap-3 img { width: 75px !important; height: 75px !important; margin-bottom: 8px !important; }
+  .page-title { font-size: 26px !important; text-align: center !important; width: 100% !important; }
+  .page-card { border: none !important; box-shadow: 0 12px 35px rgba(0,0,0,0.08) !important; border-radius: 24px !important; padding: 25px 20px !important; margin-top: 10px !important; }
+  
+  .dashboard-actions { display: grid !important; grid-template-columns: 1fr 1fr !important; width: 100% !important; gap: 10px !important; margin-top: 15px !important; }
+  .dashboard-actions > button { width: 100% !important; height: 48px !important; border-radius: 12px !important; font-size: 15px !important; margin: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; }
+
+  .filter-bar { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .filter-bar > div { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
+  .filter-bar .align-self-end { grid-column: span 2 !important; }
+  .filter-bar .form-control, .filter-bar .form-select { height: 44px !important; font-size: 14px !important; padding: 8px 12px !important; margin-bottom: 0 !important; }
+  .form-control, .form-select { height: 52px !important; border-radius: 16px !important; font-size: 16px !important; background-color: #f9fafb !important; border: 1.5px solid #e5e7eb !important; padding: 10px 18px !important; margin-bottom: 8px !important; }
+  .btn-primary-bb, .btn-outline-secondary { height: 52px !important; border-radius: 16px !important; font-size: 16px !important; font-weight: 800 !important; width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+  
+  table, thead, tbody, th, td, tr { display: block !important; width: 100% !important; }
+  thead tr { display: none !important; }
+  tr { border: 1px solid #e5e7eb !important; border-radius: 16px !important; margin-bottom: 16px !important; padding: 12px 15px !important; background: #fff !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; }
+  td { border: none !important; padding: 10px 0 !important; display: flex !important; flex-direction: row !important; justify-content: space-between !important; align-items: flex-start !important; border-bottom: 1px solid #f3f4f6 !important; gap: 15px !important; }
+  td:last-child { border-bottom: none !important; justify-content: flex-end !important; }
+  td::before { content: attr(data-label); font-weight: 800 !important; color: #6b7280 !important; text-transform: uppercase !important; font-size: 0.75rem !important; flex-shrink: 0 !important; margin-top: 2px !important; }
+  td > div { max-width: 100% !important; white-space: normal !important; word-break: break-word !important; }
+  .badge-status { padding: 5px 12px !important; font-size: 0.8rem !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="access-denied-overlay" id="accessDenied">
+  <div class="access-denied-card">
+    <span class="access-denied-icon">🔐</span>
+    <h2 class="access-denied-title">Access Denied</h2>
+    <p class="access-denied-text">You do not have permission to access the Approver Dashboard.</p>
+    <p class="access-denied-subtext">Contact your administrator to request access.</p>
+    <button class="access-denied-button" onclick="history.back()">← Go Back</button>
+  </div>
+</div>
+
+<div class="container-fluid py-4 px-3 px-md-5" style="max-width: 1300px;">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <img src="https://drive.google.com/thumbnail?id=1OpUw3MCFGLRs7GQ4xezk5ouqYTvy6yv9&sz=w200" alt="Burma Burma Logo" class="bb-logo">
+      <div>
+        <div class="page-title">Approver Dashboard</div>
+        <div class="text-muted" style="font-size:.88rem;">Review and approve employee transactions</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="appLoginSection">
+    <div class="page-card p-4 p-md-5 mx-auto" style="max-width:480px;">
+      <h5 class="fw-bold mb-1">Approver Login</h5>
+      <p class="text-muted mb-4" style="font-size:.9rem;">Enter your Employee ID and password to access approvals.</p>
+      <div id="loginAlert" class="alert alert-danger alert-custom" style="display:none;"></div>
+      <form id="appLoginForm" onsubmit="handleApproverLogin(event)">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Employee ID</label>
+          <input type="text" id="appEmpIdInput" class="form-control" placeholder="e.g. APP001" autocomplete="off" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <input type="password" id="appPasswordInput" class="form-control" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" id="appLoginBtn" class="btn-primary-bb w-100 py-2" style="font-size:1rem;">
+          <span id="appLoginBtnText">Login</span>
+          <span id="appLoginSpinner" class="spinner-bb ms-2" style="display:none;"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="dashboardSection" style="display:none;">
+    <div id="fullScreenLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(247,246,242,0.9); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+       <div class="spinner-bb" style="width:45px; height:45px; border-width:4px;"></div>
+       <div style="margin-top:15px; font-weight:800; color:#01696f; font-size:1.1rem;">Opening Form...</div>
+    </div>
+    
+    <div class="acc-card mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <div class="acc-name" id="approverNameDisplay">—</div>
+        <div class="acc-meta">
+          <span id="approverEmailDisplay"></span>
+        </div>
+      </div>
+      <div class="dashboard-actions">
+        <button id="btnRefresh" class="btn-primary-bb" onclick="loadAllTransactions()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" class="me-1"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+          Refresh Data
+        </button>
+        <button class="btn-outline-bb border-danger text-danger" onclick="handleApproverLogout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="kpi-row" id="kpiRow" style="display:none;">
+      <div class="kpi-card"><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-lbl">Total Txns</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#92400e;" id="kpiPending">—</div><div class="kpi-lbl">Waiting / Pending</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#1d4ed8;" id="kpiApproved">—</div><div class="kpi-lbl">Approved</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#b91c1c;" id="kpiRejected">—</div><div class="kpi-lbl">Rejected</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#15803d;" id="kpiPaid">—</div><div class="kpi-lbl">Paid</div></div>
+    </div>
+
+    <div class="filter-bar mb-3 page-card p-3" style="display:none;" id="filterBar">
+      <div style="flex: 1 1 140px; max-width: 200px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Global Search</label>
+        <input type="text" id="globalFilter" class="form-control" placeholder="Search anything..." style="font-size:.85rem; padding:.45rem .6rem;" autocomplete="off">
+      </div>
+      <div style="flex: 1 1 150px; max-width: 240px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Paid To</label>
+        <input type="text" id="nameFilter" class="form-control" placeholder="Search..." list="nameAutocomplete" style="font-size:.85rem; padding:.45rem .6rem;">
+        <datalist id="nameAutocomplete"></datalist>
+      </div>
+      
+      <div style="flex: 0 0 130px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">From Date</label>
+        <input type="date" id="fromDateFilter" class="form-control" style="font-size:.85rem; padding:.45rem .6rem;">
+      </div>
+      <div style="flex: 0 0 130px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">To Date</label>
+        <input type="date" id="toDateFilter" class="form-control" style="font-size:.85rem; padding:.45rem .6rem;">
+      </div>
+      
+      <div style="flex: 0 0 130px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Month</label>
+        <select id="monthFilter" class="form-select" style="font-size:.85rem; padding:.45rem .6rem;"><option value="">All Months</option></select>
+      </div>
+      <div style="flex: 0 0 140px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Status</label>
+        <select id="statusFilter" class="form-select" style="font-size:.85rem; padding:.45rem .6rem;"><option value="">All Statuses</option></select>
+      </div>
+      <div class="align-self-end ms-auto">
+        <button class="btn btn-outline-secondary rounded-pill" style="font-size:.85rem; padding:.45rem 1rem;" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <div id="dashAlert" class="alert alert-danger alert-custom mb-3" style="display:none;"></div>
+    
+    <div id="skeletonLoader" style="display:none;">
+      <div class="skeleton"></div>
+      <div class="skeleton" style="width:85%"></div>
+      <div class="skeleton" style="width:90%"></div>
+      <div class="skeleton" style="width:70%"></div>
+    </div>
+
+    <div id="txTableWrap" style="display:none;" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>TXN ID</th>
+            <th>EMPLOYEE</th>
+            <th>DATE</th>
+            <th>PAID TO</th>
+            <th>CATEGORY</th>
+            <th>SUB CATEGORY</th>
+            <th>AMOUNT</th>
+            <th>STATUS</th>
+            <th class="text-center">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="txTableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="emptyState" class="empty-state page-card" style="display:none;">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
+      <p class="fw-semibold mt-2 mb-1">No transactions found</p>
+      <p class="text-muted" style="font-size:.85rem;">Try changing the filters or refresh.</p>
+    </div>
+
+    <div id="txCountInfo" class="mt-2 text-muted" style="font-size:.83rem;display:none;"></div>
+  </div>
+</div>
+
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-card">
+      <div class="modal-header border-bottom">
+        <h6 class="modal-title fw-bold text-success" id="approveModalLabel">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="me-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          Confirm Approval
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <p class="mb-3 text-muted" style="font-size:.9rem;">Please review the full voucher details before approving:</p>
+        
+        <div id="approveTxnInfo" class="mb-3" style="font-size:.85rem;color:var(--text);background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem;">
+        </div>
+        
+        <div id="approveAlert" class="alert alert-danger alert-custom mt-3" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="btnConfirmApprove" class="btn btn-success rounded-pill fw-bold px-4">
+          <span id="approveBtnText">Confirm Approve</span>
+          <span id="approveSpinner" class="spinner-bb ms-2" style="display:none; border-top-color:#fff;"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-card">
+      <div class="modal-header border-bottom">
+        <h6 class="modal-title fw-bold text-danger" id="rejectModalLabel">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="me-1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Rejection Reason
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div id="rejectTxnInfo" class="mb-3" style="font-size:.85rem;color:var(--muted);background:#fff1f2;border:1px solid #fecaca;border-radius:10px;padding:.75rem 1rem;"></div>
+        <label class="form-label fw-semibold">Reason <span class="text-danger">*</span></label>
+        <textarea id="rejectReason" class="form-control reject-input" rows="4" placeholder="e.g. Bills missing, wrong category, Omni username required..."></textarea>
+        <div class="text-muted mt-1" style="font-size:.8rem;">Be specific — the employee will receive this reason via email.</div>
+        <div id="rejectAlert" class="alert alert-danger alert-custom mt-3" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="btnSubmitReject" class="btn btn-danger rounded-pill fw-bold px-4">
+          <span id="rejectBtnText">Submit Rejection</span>
+          <span id="rejectSpinner" class="spinner-bb ms-2" style="display:none;"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
+  <div id="approveToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body fw-bold" id="toastMsg">✅ Transaction approved!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
+
+async function apiCall(action, payload) {
+  const response = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  });
+  if (!response.ok) throw new Error(`Server error (${response.status})`);
+  return await response.json(); // return the raw body — matches what every dashboard already checks (.success, .error, .message, or a raw array)
+}
+
+
+
+let allTxns = [];
+let filteredTxns = [];
+let rejectModal = null;
+let approveModal = null;
+let approveToast = null;
+let pendingRejectRow = null;
+let pendingApproveRow = null;
+let currentApprover = null;
+
+const el = id => document.getElementById(id);
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fmtAmt(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function monthLabelFromRawDate(rawDateStr){
+  if(!rawDateStr) return '';
+  const parts = rawDateStr.split('-');
+  if(parts.length !== 3) return '';
+  const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  if(isNaN(d)) return '';
+  return d.toLocaleString('en-US',{month:'short',year:'numeric'});
+}
+
+function getStatusOrder(status) {
+  const s = String(status || '').trim().toLowerCase();
+  if (s === 'pending manager approval') return 1;
+  if (s === 'pending invoice' || s === 'invoice is pending' || s === '-') return 2;
+  if (s === 'pending accounts approval') return 3;
+  if (s === 'completed' || s === 'processed') return 4;
+  if (s === 'rejected') return 5;
+  return 99;
+}
+
+function buildMonthOptions(){
+  const months = [...new Set(allTxns.map(r=>monthLabelFromRawDate(r.rawDate)).filter(Boolean))];
+  const sel = el('monthFilter');
+  if(!sel) return;
+  sel.innerHTML = `<option value="">All Months</option>` + months.map(m=>`<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('');
+}
+
+function statusBadge(status) {
+  let displayStatus = String(status || '').trim();
+  let cssStatus = displayStatus.toLowerCase().replace(/\s+/g, '-');
+  
+  if (!displayStatus || displayStatus === '-') {
+    displayStatus = 'Pending Invoice';
+    cssStatus = 'pending-invoice';
+  }
+  
+  return `<span class="badge-status status-${cssStatus}">${escHtml(displayStatus)}</span>`;
+}
+
+function buildStatusOptions(){
+  const sel = el('statusFilter');
+  if(!sel) return;
+  const rawStatuses = [...new Set(allTxns.map(r=>r.status||'').filter(Boolean))];
+  const statuses = rawStatuses.map(s => (!s || s === '-') ? 'Pending Invoice' : s);
+  sel.innerHTML = `<option value="">All Statuses</option>` +
+    [...new Set(statuses)].sort().map(s=>`<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+}
+
+function updateKPIs(rows){
+  const total = rows.length;
+  const statusOf = r => {
+    let s = String(r.status || '').trim().toLowerCase();
+    return (!s || s === '-') ? 'pending invoice' : s;
+  };
+  const pending = rows.filter(r=>['waiting','pending','pending manager approval','pending accounts approval','pending invoice'].includes(statusOf(r))).length;
+  const approved = rows.filter(r=>['pending accounts approval'].includes(statusOf(r))).length;
+  const rejected = rows.filter(r=>statusOf(r)==='rejected').length;
+  const paid = rows.filter(r=>statusOf(r)==='paid' || statusOf(r)==='completed' || statusOf(r)==='processed').length;
+
+  el('kpiTotal').textContent = total;
+  el('kpiPending').textContent = pending;
+  el('kpiApproved').textContent = approved;
+  el('kpiRejected').textContent = rejected;
+  el('kpiPaid').textContent = paid;
+}
+
+function openVoucherWithPrefill(idx) {
+  const txn = filteredTxns[idx];
+  if (!txn) return;
+  const baseUrl = window.voucherBaseUrl || window.location.href.split('?')[0];
+
+  sessionStorage.setItem('voucherReturnAction', 'approver');
+  
+  // ✅ FIX 1: Safely extract the ID from the 'txn' object
+ const targetId = txn.requestId || txn.transactionId; 
+  if (!targetId) {
+    alert("Error: Cannot find Transaction ID.");
+    return;
+  }
+  
+  // ✅ FIX 2: Pass ONLY the targetId in the URL to prevent the URL Length Crash.
+  // We completely removed the massive JSON prefill object!
+  const targetUrl = `${baseUrl}?action=edit&rid=${encodeURIComponent(targetId)}`;
+
+  el('fullScreenLoader').style.display = 'flex';
+
+  setTimeout(() => {
+    if (window.ReactNativeWebView) {
+      // Send to Native Stack
+      window.ReactNativeWebView.postMessage(targetUrl); 
+    } else {
+      // Standard browser redirect
+      window.open(targetUrl, '_top'); 
+    }
+  }, 100);
+}
+
+function renderTable(rows) {
+  updateKPIs(rows);
+  const tbody = el('txTableBody');
+  if(!rows.length){
+    el('txTableWrap').style.display='none';
+    el('emptyState').style.display='block';
+    el('txCountInfo').style.display='none';
+    return;
+  }
+  el('emptyState').style.display='none';
+  el('txTableWrap').style.display='block';
+  el('txCountInfo').style.display='block';
+  el('txCountInfo').textContent = `Showing ${rows.length} transaction${rows.length!==1?'s':''}`;
+  
+  tbody.innerHTML = rows.map((r,i)=>{
+    let actionCell = '';
+
+    if (r.actionCode === 'edit') {
+      actionCell = `
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <button class="btn-edit-icon" title="Submit Voucher" onclick="openVoucherWithPrefill(${i})">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+          </button>
+        </div>`;
+    } else if (r.actionCode === 'rejected') {
+     actionCell = `
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+      <span style="font-size:.75rem; color:#b91c1c; font-weight:700;">❌ Rejected</span>
+      <button class="btn-edit-icon" title="Resubmit Rejected Voucher" onclick="openRejectedVoucherWithPrefill('${r.rid || ''}', '${r.token || ''}')">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+      </button>
+    </div>`;
+    } else if (r.actionCode === 'completed') {
+      const safeLink = r.pdfLink || r.folderUrl || '#';
+      actionCell = `
+        <div style="text-align:center;">
+          <a href="${escHtml(safeLink)}" target="_blank" style="display:inline-block; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:999px; padding:4px 10px; font-size:.7rem; font-weight:700; text-decoration:none; transition:all 0.2s;">
+            📄 View PDF
+          </a>
+        </div>`;
+    } else if (r.actionCode === 'sent_accounts') {
+      actionCell = `<div style="text-align:center;"><span style="font-size:.75rem; color:#1d4ed8; font-weight:700;">Sent to Accounts</span></div>`;
+    } else {
+      actionCell = `<div style="display:flex;gap:6px;flex-wrap:nowrap;justify-content:center;"><button class="action-btn btn-approve" title="Approve" onclick="handleApprove(${i})">Approve</button><button class="action-btn btn-reject" title="Reject" onclick="openRejectModal(${i})">Reject</button></div>`;
+    }
+
+    let displayDate = r.date ? String(r.date) : '—';
+
+    return `<tr data-idx="${i}">
+      <td data-label="TXN ID">
+        <div style="font-weight:700; text-align:right;">${escHtml(r.transactionId)||'—'}</div>
+        ${r.folderUrl && r.actionCode !== 'completed' ? `<div style="font-size:.75rem;margin-top:4px; text-align:right;"><a href="${escHtml(r.folderUrl)}" target="_blank" rel="noopener noreferrer">Open Folder</a></div>` : ''}
+      </td>
+      <td data-label="EMPLOYEE">
+        <div style="font-weight:700; text-align:right;">${escHtml(r.name)||'—'}</div>
+        <div style="font-size:.75rem;color:var(--muted); text-align:right;">${escHtml(r.empId)}</div>
+      </td>
+      <td data-label="DATE"><div style="text-align:right; font-size:.85rem;">${escHtml(displayDate)}</div></td>
+      <td data-label="PAID TO"><div style="font-weight:600; text-align:right; white-space:normal; word-break:break-word;">${escHtml(r.recipientName)||'—'}</div></td>
+      <td data-label="CATEGORY"><div style="font-weight:600; text-align:right;">${escHtml(r.category)||'—'}</div></td>
+      <td data-label="SUB CATEGORY"><div style="font-weight:600; text-align:right;">${escHtml(r.subCategory)||'—'}</div></td>
+      <td data-label="AMOUNT"><div style="font-weight:800; color:#01696f; font-size:1.1rem; text-align:right;">₹${fmtAmt(r.amount)}</div></td>
+      <td data-label="STATUS"><div style="text-align:right;">${statusBadge(r.status)}</div></td>
+      <td data-label="ACTIONS" class="text-center">${actionCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+function applyFilters() {
+  const globalSearch = el('globalFilter').value.trim().toLowerCase();
+  const nameSearch = el('nameFilter').value.trim().toLowerCase();
+  const status = el('statusFilter').value;
+  const month = el('monthFilter').value;
+  const fromDate = el('fromDateFilter').value; 
+  const toDate = el('toDateFilter').value;
+
+  filteredTxns = allTxns.filter(r => {
+    const searchTarget = String(
+      (r.transactionId || '') + ' ' + 
+      (r.name || '') + ' ' + 
+      (r.empId || '') + ' ' + 
+      (r.recipientName || '') + ' ' +
+      (r.category || '') + ' ' +
+      (r.subCategory || '')
+    ).toLowerCase();
+
+    const rStat = (!r.status || r.status === '-') ? 'Pending Invoice' : r.status;
+    
+    const okGlobal = !globalSearch || searchTarget.includes(globalSearch);
+    const okName = !nameSearch || String(r.name || '').toLowerCase().includes(nameSearch) || String(r.empId || '').toLowerCase().includes(nameSearch);
+    const okStatus = !status || status === '' || rStat === status;
+    const okMonth = !month || monthLabelFromRawDate(r.rawDate) === month;
+
+    let okDate = true;
+    if (fromDate && r.rawDate < fromDate) okDate = false;
+    if (toDate && r.rawDate > toDate) okDate = false;
+
+    return okGlobal && okName && okStatus && okMonth && okDate;
+  });
+
+  filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+  renderTable(filteredTxns);
+}
+
+function clearFilters(){
+  el('nameFilter').value = '';
+  el('statusFilter').value = '';
+  el('monthFilter').value = '';
+  el('fromDateFilter').value = '';
+  el('toDateFilter').value = '';
+  el('globalFilter').value = '';
+  filteredTxns = [...allTxns];
+  filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+  renderTable(filteredTxns);
+}
+
+function loadAllTransactions(){
+  el('skeletonLoader').style.display='block';
+  el('txTableWrap').style.display='none';
+  el('emptyState').style.display='none';
+  el('dashAlert').style.display='none';
+  el('txCountInfo').style.display='none';
+  
+  apiCall('getVoucherAppUrl').then(url => { if (url) window.voucherBaseUrl = url; });
+
+  const filter = { name: el('nameFilter').value.trim(), approverEmail: window.approverEmail || '' };
+  
+  apiCall('getAllEmployeeTransactions', { filter })
+  .then(txns => {
+    allTxns = txns || [];
+    filteredTxns = [...allTxns];
+    filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+    
+    el('skeletonLoader').style.display='none';
+    el('kpiRow').style.display='flex';
+    el('filterBar').style.display='flex';
+    
+    buildMonthOptions();
+    buildStatusOptions();
+    renderTable(filteredTxns);
+
+    // Nested API call for the autocomplete list
+    apiCall('getEmployeeNameList', { approverEmail: window.approverEmail })
+      .then(names => {
+        const dl = el('nameAutocomplete');
+        dl.innerHTML = (names || []).map(n=>`<option value="${escHtml(n)}">`).join('');
+      })
+      .catch(err => console.error(err));
+  })
+  .catch(err => {
+    el('skeletonLoader').style.display='none';
+    el('dashAlert').textContent = 'Error loading data: ' + (err.message || String(err));
+    el('dashAlert').style.display='block';
+    
+    // ✅ Added this back so you can debug network/CORS errors in the F12 console!
+    console.error(err); 
+  });
+}
+
+function handleApprove(idx){
+  pendingApproveRow = filteredTxns[idx];
+  if(!pendingApproveRow) return;
+
+  el('approveAlert').style.display = 'none';
+
+  let lineItemsHtml = '';
+  if (pendingApproveRow.lines && pendingApproveRow.lines.length > 0) {
+    lineItemsHtml = pendingApproveRow.lines.map((l, i) => `
+      <tr>
+        <td style="color:var(--muted); padding-bottom:3px; padding-left:10px;">• ${escHtml(l.particular || 'Item ' + (i+1))}</td>
+        <td style="font-weight:600; text-align:right;">₹${fmtAmt(l.amount)}</td>
+      </tr>
+    `).join('');
+  } else {
+    lineItemsHtml = `
+      <tr>
+        <td style="color:var(--muted); padding-bottom:3px; padding-left:10px;">• Transaction details</td>
+        <td style="font-weight:600; text-align:right;">₹${fmtAmt(pendingApproveRow.amount)}</td>
+      </tr>
+    `;
+  }
+
+  el('approveTxnInfo').innerHTML = `
+    <table style="width:100%; font-size:0.85rem;">
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap; width:35%;">Employee:</td>
+        <td style="font-weight:700; text-align:right;">${escHtml(pendingApproveRow.name)} (${escHtml(pendingApproveRow.empId)})</td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap;">Date:</td>
+        <td style="font-weight:600; text-align:right;">${escHtml(pendingApproveRow.date)}</td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap;">Paid To:</td>
+        <td style="font-weight:600; text-align:right;">${escHtml(pendingApproveRow.recipientName)}</td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap;">Category:</td>
+        <td style="font-weight:600; text-align:right;">${escHtml(pendingApproveRow.category || '—')}</td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap;">Sub Category:</td>
+        <td style="font-weight:600; text-align:right;">${escHtml(pendingApproveRow.subCategory || '—')}</td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap;">Payment Mode:</td>
+        <td style="font-weight:600; text-align:right;">
+          <span style="font-size:0.75rem; background:#e2e8f0; color:#475569; padding:2px 8px; border-radius:12px;">${escHtml(pendingApproveRow.paymentMode || '—')}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted); padding-bottom:6px; white-space:nowrap;">Unit:</td>
+        <td style="font-weight:600; text-align:right;">${escHtml(pendingApproveRow.unit || '—')}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="color:var(--primary); font-weight:700; padding-top:10px; padding-bottom:4px; border-bottom:1px solid #bbf7d0;">Voucher Breakdown</td>
+      </tr>
+      ${lineItemsHtml}
+      <tr>
+        <td style="color:var(--muted); padding-top:10px; border-top:1.5px solid #dcfce7; font-weight:800; white-space:nowrap;">Total Amount:</td>
+        <td style="font-weight:800; font-size:1.05rem; color:#15803d; padding-top:10px; border-top:1.5px solid #dcfce7; text-align:right;">₹${fmtAmt(pendingApproveRow.amount)}</td>
+      </tr>
+    </table>
+  `;
+
+  el('btnConfirmApprove').onclick = function() {
+    const btn = el('btnConfirmApprove');
+    btn.disabled = true;
+    el('approveBtnText').textContent = 'Approving...';
+    el('approveSpinner').style.display = 'inline-block';
+
+   apiCall('updateOmniStatus', { 
+      rowIndex: pendingApproveRow.rowIndex, 
+      action: 'approve', 
+      reason: '', 
+      transactionId: pendingApproveRow.transactionId 
+    })
+    .then(res => {
+      approveModal.hide();
+      el('toastMsg').textContent = `✅ Approved: ${pendingApproveRow.transactionId || 'transaction'}`;
+      el('approveToast').classList.remove('text-bg-danger');
+      el('approveToast').classList.add('text-bg-success');
+      new bootstrap.Toast(el('approveToast'), { delay: 3000 }).show();
+      
+      btn.disabled = false;
+      el('approveBtnText').textContent = 'Confirm Approve';
+      el('approveSpinner').style.display = 'none';
+      
+      setTimeout(loadAllTransactions, 1000);
+    })
+    .catch(err => {
+      el('approveAlert').textContent = err.message || String(err);
+      el('approveAlert').style.display = 'block';
+      
+      btn.disabled = false;
+      el('approveBtnText').textContent = 'Confirm Approve';
+      el('approveSpinner').style.display = 'none';
+    });
+  }; // ✅ FIX: Added closing brace and semicolon for the onclick function
+
+  approveModal.show(); // ✅ FIX: Modal will now actually open!
+}
+
+function openRejectModal(idx) {
+  pendingRejectRow = filteredTxns[idx];
+  if (!pendingRejectRow) return;
+
+  el('rejectAlert').style.display = 'none';
+  el('rejectReason').value = '';
+
+  el('rejectTxnInfo').innerHTML = `
+    <b>Employee:</b> ${escHtml(pendingRejectRow.name)} (${escHtml(pendingRejectRow.empId)})<br>
+    <b>Paid To:</b> ${escHtml(pendingRejectRow.recipientName)}<br>
+    <b>Amount:</b> ₹${fmtAmt(pendingRejectRow.amount)}
+  `;
+
+  rejectModal.show();
+}
+
+function openRejectedVoucherWithPrefill(rid, token) {
+  if (!rid) {
+    alert('Request ID missing. Cannot open voucher.');
+    return;
+  }
+  
+  const baseUrl = window.voucherBaseUrl || window.location.href.split('?')[0];
+  sessionStorage.setItem('voucherReturnAction', 'approver');
+  
+  el('fullScreenLoader').style.display = 'flex';
+  
+  const targetUrl = `${baseUrl}?action=resubmit&rid=${encodeURIComponent(rid)}&token=${encodeURIComponent(token)}`;
+  
+  setTimeout(() => {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'navigate', url: targetUrl }));
+    } else {
+      window.open(targetUrl, '_blank');
+    }
+  }, 100);
+}
+
+function setupRejectHandler(){
+  el('btnSubmitReject').addEventListener('click', ()=>{
+    const reason = el('rejectReason').value.trim();
+    el('rejectAlert').style.display = 'none';
+    if(!reason){
+      el('rejectAlert').textContent = 'Please provide a rejection reason.';
+      el('rejectAlert').style.display = 'block';
+      return;
+    }
+    const btn = el('btnSubmitReject');
+    btn.disabled = true;
+    el('rejectBtnText').textContent = 'Submitting...';
+    el('rejectSpinner').style.display = 'inline-block';
+    
+    apiCall('updateOmniStatus', { 
+  rowIndex: pendingRejectRow.rowIndex, 
+  action: 'reject', 
+  reason: reason, 
+  transactionId: pendingRejectRow.transactionId 
+})
+.then(res => {
+  bootstrap.Modal.getInstance(el('rejectModal')).hide();
+  el('toastMsg').textContent = `❌ Rejected: ${pendingRejectRow?.transactionId || 'transaction'}`;
+  el('approveToast').classList.remove('text-bg-success');
+  el('approveToast').classList.add('text-bg-danger');
+  new bootstrap.Toast(el('approveToast'), { delay: 3500 }).show();
+  
+  btn.disabled = false;
+  el('rejectBtnText').textContent = 'Submit Rejection';
+  el('rejectSpinner').style.display = 'none';
+  
+  setTimeout(loadAllTransactions, 1000);
+})
+.catch(err => {
+  el('rejectAlert').textContent = err.message || String(err);
+  el('rejectAlert').style.display = 'block';
+  
+  btn.disabled = false;
+  el('rejectBtnText').textContent = 'Submit Rejection';
+  el('rejectSpinner').style.display = 'none';
+});
+  });
+}
+
+function bindFilters(){ 
+  el('nameFilter').addEventListener('input', applyFilters); 
+  el('statusFilter').addEventListener('change', applyFilters); 
+  el('monthFilter').addEventListener('change', applyFilters); 
+  el('fromDateFilter').addEventListener('change', applyFilters); 
+  el('toDateFilter').addEventListener('change', applyFilters); 
+  el('globalFilter').addEventListener('input', applyFilters);
+}
+
+function handleApproverLogin(event) {
+  event.preventDefault();
+  const loginAlert = el('loginAlert');
+  loginAlert.style.display = 'none';
+
+  const empId = String(el('appEmpIdInput')?.value || '').trim();
+  const password = String(el('appPasswordInput')?.value || '').trim();
+
+  if (!empId) { 
+    loginAlert.textContent = 'Please enter your Employee ID.'; 
+    loginAlert.style.display = 'block';
+    el('appEmpIdInput').focus(); 
+    return; 
+  }
+  if (!password) { 
+    loginAlert.textContent = 'Please enter your password.'; 
+    loginAlert.style.display = 'block';
+    el('appPasswordInput').focus(); 
+    return; 
+  }
+
+  const btn = el('appLoginBtn');
+  btn.disabled = true;
+  el('appLoginBtnText').textContent = 'Verifying...';
+  el('appLoginSpinner').style.display = 'inline-block';
+
+  apiCall('validateApproverLogin', { empId, password })
+  .then(result => {
+    if (result && result.success) {
+      // ✅ FIX perfectly preserved: backend returns "empName"
+      currentApprover = { 
+        empId: result.empId, 
+        name: result.empName, 
+        email: result.approverEmail 
+      };
+      
+      sessionStorage.setItem('approverEmpId', result.empId);
+      sessionStorage.setItem('approverName', result.empName);
+      sessionStorage.setItem('approverEmail', result.approverEmail);
+      
+      window.approverEmail = result.approverEmail;
+      window.approverName = result.empName;
+      
+      el('appLoginSection').style.display = 'none';
+      el('dashboardSection').style.display = 'block';
+      el('approverNameDisplay').textContent = result.empName;
+      el('approverEmailDisplay').textContent = result.approverEmail;
+      
+      loadAllTransactions();
+    } else {
+      loginAlert.textContent = result?.message || 'Login failed. Please check credentials.';
+      loginAlert.style.display = 'block';
+      el('appPasswordInput').value = ''; 
+      el('appPasswordInput').focus();
+    }
+    
+    // UI resets for any successful server response
+    btn.disabled = false;
+    el('appLoginBtnText').textContent = 'Login';
+    el('appLoginSpinner').style.display = 'none';
+  })
+  .catch(err => {
+    // Network/System failure handling
+    loginAlert.textContent = err.message || String(err);
+    loginAlert.style.display = 'block';
+    el('appPasswordInput').value = '';
+    
+    btn.disabled = false;
+    el('appLoginBtnText').textContent = 'Login';
+    el('appLoginSpinner').style.display = 'none';
+  });
+}
+
+function handleApproverLogout() {
+  if (confirm('Logout from Approver Dashboard?')) {
+    sessionStorage.clear();
+    currentApprover = null;
+    
+    // ✅ FIX: Safely reloads the current GitHub page to show the login screen instantly
+    window.location.reload(); 
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  rejectModal  = new bootstrap.Modal(el('rejectModal'));
+  approveModal = new bootstrap.Modal(el('approveModal'));
+  approveToast = el('approveToast');
+  setupRejectHandler();
+  bindFilters();
+
+  const savedEmpId = sessionStorage.getItem('approverEmpId');
+  const savedName = sessionStorage.getItem('approverName');
+  const savedEmail = sessionStorage.getItem('approverEmail');
+
+  if (savedEmpId && savedName && savedEmail) {
+    currentApprover = {
+      empId: savedEmpId,
+      name: savedName,
+      email: savedEmail
+    };
+    window.approverEmail = savedEmail;
+    window.approverName = savedName;
+    el('appLoginSection').style.display = 'none';
+    el('dashboardSection').style.display = 'block';
+    el('approverNameDisplay').textContent = savedName;
+    el('approverEmailDisplay').textContent = savedEmail;
+    loadAllTransactions();
+  } else {
+    el('appLoginSection').style.display = 'block';
+    el('dashboardSection').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>

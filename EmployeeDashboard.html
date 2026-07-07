@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Employee Dashboard — Burma Burma</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root { --primary:#01696f; --primary-hover:#0c4e54; --accent:#1d9bf0; --success:#16a34a; --warning:#d97706; --danger:#dc2626; --bg:#f7f6f2; --surface:#fff; --border:#e5e7eb; --text:#111827; --muted:#6b7280; --faint:#d1d5db;}
+  body { background:var(--bg); font-family:system-ui,-apple-system,'Segoe UI',sans-serif; color:var(--text); }
+  .bb-logo { width:60px; height:60px; border-radius:50%; object-fit:cover; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+  .page-card { background:var(--surface); border-radius:20px; border:1px solid var(--border); box-shadow:0 8px 32px rgba(15,23,42,.07); }
+  .page-title { font-weight:800; font-size:1.55rem; color:#1d4ed8; }
+
+  .badge-status { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight:700; text-transform:capitalize; white-space:nowrap; }
+  .status-paid { background:#dcfce7; color:#15803d; }
+  .status-approved { background:#dbeafe; color:#1d4ed8; }
+  .status-completed { background:#dbeafe; color:#1d4ed8; }
+  .status-waiting { background:#fef9c3; color:#92400e; }
+  .status-pending { background:#fef9c3; color:#92400e; }
+  .status-pending-approval { background:#fef9c3; color:#92400e; }
+  .status-rejected { background:#fee2e2; color:#b91c1c; }
+  .status-default { background:#f3f4f6; color:#6b7280; }
+  .status-pending-invoice {background: #ffdfd6;color: #b91c1c;}
+  .status-pending-manager-approval { background:#fef9c3; color:#92400e; }
+  .status-pending-accounts-approval { background:#dbeafe; color:#1d4ed8; }
+
+  .form-control, .form-select { border-radius:10px; border-color:var(--border); background:#f9fafb; font-size:.9rem; padding:.6rem .9rem; }
+  .form-control:focus, .form-select:focus { border-color:var(--accent); box-shadow:0 0 0 .15rem rgba(29,155,240,.25); background:#fff; }
+  table { width:100%; border-collapse:collapse; font-size:.875rem; }
+  thead th { background:#f9fafb; font-weight:700; color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; padding:.75rem .9rem; border-bottom:2px solid var(--border); white-space:nowrap; }
+  tbody td { padding:.65rem .9rem; border-bottom:1px solid #f3f4f6; vertical-align:middle; }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr:hover { background:#f8fafc; }
+  .table-wrap { overflow-x:auto; border-radius:14px; border:1px solid var(--border); }
+
+  .btn-edit-icon { background: #f8fafc; color: #475569; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 4px 8px; cursor: pointer; transition: all .2s; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; }
+  .btn-edit-icon:hover { border-color: #cbd5e1; background: #f1f5f9; color: #1e293b; }
+
+  .btn-primary-bb { background:linear-gradient(135deg,#1d9bf0,#01696f); border:none; color:#fff; font-weight:700; border-radius:999px; padding:.6rem 1.4rem; transition:box-shadow .2s; }
+  .btn-primary-bb:hover { box-shadow:0 8px 24px rgba(1,105,111,.3); color:#fff; }
+  .btn-outline-bb { background:none; border:1.5px solid var(--primary); color:var(--primary); font-weight:700; border-radius:999px; padding:.5rem 1.2rem; transition:all .2s; cursor:pointer; }
+  .btn-outline-bb:hover { background:var(--primary); color:#fff; }
+
+  .emp-card { border:1.5px solid #dbeafe; border-radius:14px; padding:1rem 1.25rem; background:#f0f9ff; }
+  .emp-name { font-weight:800; font-size:1.1rem; }
+  .emp-meta { font-size:.85rem; color:var(--muted); }
+  .filter-bar { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
+
+  .skeleton { background:linear-gradient(90deg,#f3f4f6 25%,#e9ebee 50%,#f3f4f6 75%); background-size:200% 100%; animation:shimmer 1.5s ease infinite; border-radius:8px; height:44px; margin-bottom:8px; }
+  @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .empty-state svg { margin-bottom:.75rem; opacity:.35; }
+  .alert-custom { border-radius:12px; font-size:.9rem; }
+  .spinner-bb { width:20px; height:20px; border:3px solid #e5e7eb; border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; display:inline-block; vertical-align:middle; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .kpi-row { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .kpi-card { flex:1 1 140px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:.9rem 1.1rem; text-align:center; }
+  .kpi-val { font-size:1.5rem; font-weight:800; }
+  .kpi-lbl { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+  @media (max-width: 576px) { .page-title { font-size:1.25rem; } thead th, tbody td { padding:.5rem .5rem; font-size:.75rem; } .kpi-val { font-size:1.2rem; } }
+
+  .access-denied-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  .access-denied-overlay.show {
+    display: flex;
+  }
+  .access-denied-card {
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    padding: 60px 40px;
+    text-align: center;
+    max-width: 500px;
+    width: 90vw;
+  }
+  .access-denied-icon {
+    font-size: 72px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .access-denied-title {
+    color: #ef4444;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 15px 0;
+  }
+  .access-denied-text {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+  .access-denied-subtext {
+    color: #9ca3af;
+    font-size: 13px;
+    margin-bottom: 30px;
+  }
+  .access-denied-button {
+    background: linear-gradient(135deg, #1d9bf0, #01696f);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: box-shadow 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .access-denied-button:hover {
+    box-shadow: 0 8px 24px rgba(1, 105, 111, 0.3);
+    color: white;
+  }
+
+  /* ✅ NEW: Rejection Reason Modal styling */
+  .reject-reason-modal-card {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  }
+  .reject-reason-box {
+    background: #fff1f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #7f1d1d;
+    font-size: .9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+/* ================= PREMIUM MOBILE APP STYLES ================= */
+/* ================= PREMIUM MOBILE APP STYLES ================= */
+@media (max-width: 768px) {
+  /* 1. Push everything safely below the Android/iOS Status Bar */
+  body {
+    padding: 50px 15px 40px 15px !important;
+    background-color: #f7f6f2 !important; 
+  }
+
+  /* 2. Center and stack the top logo and title beautifully */
+  .d-flex.align-items-center.gap-3 {
+    flex-direction: column !important;
+    text-align: center !important;
+    margin-bottom: 25px !important;
+    width: 100% !important;
+  }
+  
+  .d-flex.align-items-center.gap-3 img {
+    width: 75px !important;
+    height: 75px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .page-title {
+    font-size: 26px !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* 3. Make the Login Card & Filter Bar feel like floating native elements */
+  .page-card {
+    border: none !important;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.08) !important;
+    border-radius: 24px !important;
+    padding: 25px 20px !important;
+    margin-top: 10px !important;
+  }
+
+  .filter-bar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; 
+    gap: 12px !important;
+  }
+  
+  .filter-bar > div {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  .filter-bar .align-self-end {
+    grid-column: span 2 !important; /* Makes the "Clear" button span the bottom */
+  }
+
+  /* Shrink filter inputs slightly so they fit nicely side-by-side */
+  .filter-bar .form-control, .filter-bar .form-select {
+    height: 44px !important;
+    font-size: 14px !important; 
+    padding: 8px 12px !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* 4. Native App Inputs (Larger, rounded, touch-friendly) */
+  .form-control, .form-select {
+    height: 52px !important;
+    border-radius: 16px !important;
+    font-size: 16px !important; /* 16px stops phones from auto-zooming */
+    background-color: #f9fafb !important;
+    border: 1.5px solid #e5e7eb !important;
+    padding: 10px 18px !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* 5. Native App Buttons (Thick, full width) */
+  .btn-primary-bb, .btn-outline-secondary {
+    height: 52px !important;
+    border-radius: 16px !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 6. Transform Table into Mobile Cards */
+  table, thead, tbody, th, td, tr { 
+    display: block !important; 
+    width: 100% !important; 
+  }
+  thead tr { 
+    display: none !important; 
+  }
+  tr { 
+    border: 1px solid #e5e7eb !important; 
+    border-radius: 16px !important; 
+    margin-bottom: 16px !important; 
+    padding: 12px 15px !important; 
+    background: #fff !important; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+  }
+  
+  /* PERFECT SIDE-BY-SIDE ALIGNMENT */
+  td { 
+    border: none !important; 
+    padding: 10px 0 !important; 
+    display: flex !important; 
+    flex-direction: row !important; /* Forces side-by-side */
+    justify-content: space-between !important; 
+    align-items: flex-start !important; 
+    border-bottom: 1px solid #f3f4f6 !important;
+    gap: 15px !important; /* Space between label and text */
+  }
+  td:last-child {
+    border-bottom: none !important;
+    justify-content: flex-end !important; /* Pushes Edit button to the right */
+  }
+  
+  td::before { 
+    content: attr(data-label); 
+    font-weight: 800 !important; 
+    color: #6b7280 !important; 
+    text-transform: uppercase !important; 
+    font-size: 0.75rem !important; 
+    flex-shrink: 0 !important; /* Prevents the label from getting squished */
+    margin-top: 2px !important;
+  }
+
+  /* Make sure long names and notes drop to the next line safely */
+  td > div {
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  /* Fix Status Badge Size */
+  .badge-status {
+    padding: 5px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Secondary utility buttons */
+  #voucherLinkWrap { width: 100% !important; margin-top: 10px !important; }
+  #voucherLinkWrap a { width: 100% !important; }
+}
+</style>
+</head>
+<body>
+<div class="access-denied-overlay" id="accessDenied">
+  <div class="access-denied-card">
+    <span class="access-denied-icon">🔐</span>
+    <h2 class="access-denied-title">Access Denied</h2>
+    <p class="access-denied-text">You do not have permission to access the Employee Dashboard.</p>
+    <p class="access-denied-subtext">Contact your administrator to request access.</p>
+    <button class="access-denied-button" onclick="history.back()">← Go Back</button>
+  </div>
+</div>
+
+<div class="container-fluid py-4 px-3 px-md-5" style="max-width: 1300px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <img src="https://drive.google.com/thumbnail?id=1OpUw3MCFGLRs7GQ4xezk5ouqYTvy6yv9&sz=w200" alt="Burma Burma Logo" class="bb-logo">
+      <div>
+        <div class="page-title">Employee Dashboard</div>
+        <div class="text-muted" style="font-size:.88rem;">View your transactions &amp; create voucher</div>
+      </div>
+    </div>
+    <div id="voucherLinkWrap" style="display:none;">
+      <a id="voucherLinkBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary-bb" style="text-decoration:none;">
+        + Create Voucher
+      </a>
+    </div>
+  </div>
+
+  <div id="loginSection">
+    <div class="page-card p-4 p-md-5 mx-auto" style="max-width:480px;">
+      <h5 class="fw-bold mb-1">Employee Login</h5>
+      <p class="text-muted mb-4" style="font-size:.9rem;">Enter your Employee ID and password to load your transactions.</p>
+      <div id="loginAlert" class="alert alert-danger alert-custom" style="display:none;"></div>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Employee ID</label>
+          <input type="text" id="empIdInput" class="form-control" placeholder="e.g. EMP001 or H236" autocomplete="off" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Password</label>
+          <input type="password" id="empPasswordInput" class="form-control" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" id="btnLogin" class="btn-primary-bb w-100 py-2" style="font-size:1rem;">
+          <span id="loginBtnText">View My Transactions</span>
+          <span id="loginSpinner" class="spinner-bb ms-2" style="display:none;"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MISSING TAG RESTORED HERE -->
+  <div id="dashboardSection" style="display:none;">
+
+    <!-- Full Screen Loader for Redirects -->
+    <div id="fullScreenLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(247,246,242,0.9); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+       <div class="spinner-bb" style="width:45px; height:45px; border-width:4px;"></div>
+       <div style="margin-top:15px; font-weight:800; color:#01696f; font-size:1.1rem;">Opening Form...</div>
+    </div>
+
+    <div class="emp-card mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <div class="emp-name" id="empNameDisplay">—</div>
+        <div class="emp-meta">
+          <span id="empIdDisplay" class="me-3"></span>
+          <span id="empDeptDisplay"></span>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn-outline-bb" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="forceRefresh()">↻ Refresh</button>
+        <button class="btn-outline-bb" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color:#dc2626; color:#dc2626;" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi-card"><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-lbl">Total Txns</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#92400e;" id="kpiPending">—</div><div class="kpi-lbl">Waiting / Pending</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#1d4ed8;" id="kpiApproved">—</div><div class="kpi-lbl">Approved</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#b91c1c;" id="kpiRejected">—</div><div class="kpi-lbl">Rejected</div></div>
+      <div class="kpi-card"><div class="kpi-val" style="color:#15803d;" id="kpiPaid">—</div><div class="kpi-lbl">Paid</div></div>
+    </div>
+
+    <div class="filter-bar mb-3 page-card p-3">
+      <div style="flex: 1 1 140px; max-width: 200px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Global Search</label>
+        <input type="text" id="globalFilter" class="form-control" placeholder="Search anything..." style="font-size:.85rem; padding:.45rem .6rem;" autocomplete="off">
+      </div>
+      <div style="flex: 1 1 220px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.8rem;">Paid To</label>
+        <input type="text" id="nameFilter" class="form-control" placeholder="Search..." list="nameOptionsList" style="font-size:.85rem; padding:.45rem .6rem;" autocomplete="off">
+        <datalist id="nameOptionsList"></datalist>
+      </div>
+      <div style="flex: 0 0 180px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.85rem;">Month</label>
+        <select id="monthFilter" class="form-select"><option value="">All Months</option></select>
+      </div>
+      <div style="flex: 0 0 200px;">
+        <label class="form-label fw-semibold mb-1" style="font-size:.85rem;">Status Filter</label>
+        <select id="statusFilter" class="form-select"><option value="">All Statuses</option></select>
+      </div>
+      <div class="align-self-end"><button class="btn btn-outline-secondary rounded-pill" onclick="clearFilters()">Clear</button></div>
+    </div>
+
+    <div id="dashAlert" class="alert alert-danger alert-custom mb-3" style="display:none;"></div>
+    <div id="skeletonLoader"><div class="skeleton"></div><div class="skeleton" style="width:85%"></div><div class="skeleton" style="width:90%"></div></div>
+
+    <div id="txTableWrap" style="display:none;" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>TXN ID</th>
+            <th>DATE</th>
+            <th>PAID TO</th>
+            <th>NOTES</th>
+            <th>AMOUNT</th>
+            <th>STATUS</th>
+            <th class="text-center">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="txTableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="emptyState" class="empty-state page-card" style="display:none;">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>
+      <p class="fw-semibold mt-2 mb-1">No transactions found</p>
+    </div>
+
+    <div id="txCountInfo" class="mt-2 text-muted" style="font-size:.83rem;display:none;"></div>
+  </div>
+
+</div>
+
+<!-- ✅ NEW: Rejection Reason Interstitial Modal -->
+<div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-labelledby="rejectionReasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content reject-reason-modal-card">
+      <div class="modal-header border-bottom">
+        <h6 class="modal-title fw-bold text-danger" id="rejectionReasonModalLabel">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" class="me-1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Voucher Rejected
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <p class="mb-2 text-muted" style="font-size:.85rem;">This voucher was rejected for the following reason:</p>
+        <div id="rejectionReasonText" class="reject-reason-box">—</div>
+      </div>
+      <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="btnProceedToEdit" class="btn-primary-bb" onclick="proceedToEditRejected()">Proceed to Edit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
+
+async function apiCall(action, payload) {
+  const response = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, payload })
+  });
+  if (!response.ok) throw new Error(`Server error (${response.status})`);
+  return await response.json(); // return the raw body — matches what every dashboard already checks (.success, .error, .message, or a raw array)
+}
+
+let allTxns = [];
+let filteredTxns = [];
+let currentEmployee = null;
+
+// ✅ NEW: state for the rejection-reason interstitial
+let rejectionReasonModal = null;
+let pendingRejectedVoucher = null;
+
+const el = id => document.getElementById(id);
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fmtAmt(n){ return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function monthLabelFromDateStr(dateStr){
+  if(!dateStr) return '';
+  const s = String(dateStr).trim();
+  const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if(!m) return '';
+  const d = new Date(`${m[3]}-${m[2]}-${m[1]}`);
+  if(isNaN(d)) return '';
+  return d.toLocaleString('en-US',{month:'short',year:'numeric'});
+}
+
+function buildMonthOptions(){
+  const months = [...new Set(allTxns.map(r=>monthLabelFromDateStr(r.date)).filter(Boolean))];
+  const sel = el('monthFilter');
+  if(!sel) return;
+  sel.innerHTML = `<option value="">All Months</option>` + months.map(m=>`<option value="${escHtml(m)}">${escHtml(m)}</option>`).join('');
+}
+
+function statusBadge(status) {
+  let displayStatus = String(status||'').trim();
+  let cssStatus = displayStatus.toLowerCase().replace(/\s+/g,'-');
+  if (!displayStatus || displayStatus === '-') {
+    displayStatus = 'Pending Invoice';
+    cssStatus = 'pending-invoice';
+  }
+  return `<span class="badge-status status-${cssStatus}">${escHtml(displayStatus)}</span>`;
+}
+
+function buildStatusOptions(){
+  const sel = el('statusFilter');
+  if(!sel) return;
+  const rawStatuses = [...new Set(allTxns.map(r=>r.status||'').filter(Boolean))];
+  const statuses = rawStatuses.map(s => (!s || s === '-') ? 'Pending Invoice' : s);
+  sel.innerHTML = `<option value="">All Statuses</option>` +
+    [...new Set(statuses)].sort().map(s=>`<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+}
+
+function updateKPIs(rows){
+  const total = rows.length;
+  const statusOf = r => {
+    let s = String(r.status || '').trim().toLowerCase();
+    return (!s || s === '-') ? 'pending invoice' : s;
+  };
+  const pending = rows.filter(r=>['waiting','pending','pending approval','pending manager approval','pending accounts approval','pending invoice'].includes(statusOf(r))).length;
+  const approved = rows.filter(r=>['approved','completed','pdf generated'].includes(statusOf(r))).length;
+  const rejected = rows.filter(r=>statusOf(r)==='rejected').length;
+  const paid = rows.filter(r=>statusOf(r)==='paid' || statusOf(r)==='completed' || statusOf(r)==='processed').length;
+
+  el('kpiTotal').textContent = total;
+  el('kpiPending').textContent = pending;
+  el('kpiApproved').textContent = approved;
+  el('kpiRejected').textContent = rejected;
+  el('kpiPaid').textContent = paid;
+}
+
+function showLoginAlert(msg) { el('loginAlert').textContent = msg; el('loginAlert').style.display = 'block'; }
+function clearLoginAlert() { el('loginAlert').style.display = 'none'; }
+function showDashAlert(msg) { el('dashAlert').textContent = msg; el('dashAlert').style.display = 'block'; }
+
+function getStatusOrder(status) {
+  const s = String(status || '').trim().toLowerCase();
+  if (s === 'pending manager approval') return 1;
+  if (s === 'pending invoice' || s === 'invoice is pending' || s === '-') return 2;
+  if (s === 'pending accounts approval') return 3;
+  if (s === 'completed' || s === 'processed') return 4;
+  if (s === 'rejected') return 5;
+  return 99;
+}
+
+function openVoucherWithPrefill(idx) {
+  const txn = filteredTxns[idx];
+  if (!txn) return;
+  const baseUrl = window._voucherBaseUrl || window.location.href.split('?')[0];
+  
+  sessionStorage.setItem('voucherReturnAction', 'employee');
+  // ✅ NEW CODE: Extract ONLY the ID. Do NOT build the massive JSON prefill object here.
+  const targetId = txn.requestId || txn.transactionId; 
+  if (!targetId) {
+    alert("Error: Cannot find Transaction ID.");
+    return;
+  }
+  
+  // ✅ NEW CODE: Pass ONLY the targetId in the URL to prevent URL length crashes
+  const targetUrl = `${baseUrl}?action=voucher&rid=${encodeURIComponent(targetId)}`;
+
+  el('fullScreenLoader').style.display = 'flex';
+
+  setTimeout(() => {
+    if (window.ReactNativeWebView) {
+      // Send to Native Stack
+      window.ReactNativeWebView.postMessage(targetUrl); 
+    } else {
+      // Standard browser redirect
+      window.open(targetUrl, '_top'); 
+    }
+  }, 100);
+}
+
+function forceRefresh() {
+  if (!currentEmployee) return;
+  localStorage.removeItem('permanentTxns_' + currentEmployee.empId);
+  loadTransactions(currentEmployee.empId);
+}
+
+// ✅ NEW: Intermediary function — shows the rejection reason before allowing edit/resubmit.
+// idx refers to the row's position in filteredTxns, same pattern as openVoucherWithPrefill(idx).
+function showRejectionReason(idx) {
+  const r = filteredTxns[idx];
+  if (!r) return;
+
+  const rid = r.rid || '';
+  const token = r.token || '';
+  const reason = (r.rejectionReason && String(r.rejectionReason).trim())
+    ? String(r.rejectionReason).trim()
+    : 'No specific reason was provided by the approver.';
+
+  // Stash rid/token for the "Proceed to Edit" action
+  pendingRejectedVoucher = { rid, token };
+
+  if (rejectionReasonModal) {
+    el('rejectionReasonText').textContent = reason;
+    rejectionReasonModal.show();
+  } else {
+    // Fallback if Bootstrap modal isn't available for some reason
+    if (confirm('Voucher Rejected — Reason:\n\n' + reason + '\n\nProceed to edit and resubmit?')) {
+      openRejectedVoucherWithPrefill(rid, token);
+    }
+  }
+}
+
+// ✅ NEW: "Proceed to Edit" button handler inside the modal.
+// Calls the EXISTING openRejectedVoucherWithPrefill(rid, token) function unchanged.
+function proceedToEditRejected() {
+  if (rejectionReasonModal) rejectionReasonModal.hide();
+  if (pendingRejectedVoucher) {
+    openRejectedVoucherWithPrefill(pendingRejectedVoucher.rid, pendingRejectedVoucher.token);
+  }
+}
+
+function renderTable(rows) {
+  updateKPIs(rows);
+  const tbody = el('txTableBody');
+  if(!rows.length){
+    el('txTableWrap').style.display='none';
+    el('emptyState').style.display='block';
+    el('txCountInfo').style.display='none';
+    return;
+  }
+  el('emptyState').style.display='none';
+  el('txTableWrap').style.display='block';
+  el('txCountInfo').style.display='block';
+  el('txCountInfo').textContent = `Showing ${rows.length} transaction${rows.length!==1?'s':''}`;
+
+  tbody.innerHTML = rows.map((r,i)=>{
+    let actionCell = '';
+
+    if (r.actionCode === 'edit') {
+      actionCell = `
+        <div style="display:flex; flex-direction:column; align-items:center;">
+          <button class="btn-edit-icon" title="Submit Voucher" onclick="openVoucherWithPrefill(${i})">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+          </button>
+        </div>`;
+    } else if (r.actionCode === 'rejected') {
+      actionCell = `
+        <div style="display:flex; flex-direction:column; align-items:center;">
+           <button class="btn-edit-icon" title="View Rejection Reason & Resubmit" onclick="showRejectionReason(${i})">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+          </button>
+        </div>`;
+    } else if (r.actionCode === 'sent_approval') {
+      actionCell = `<div style="text-align:center;"><span style="font-size:.75rem; color:#92400e; font-weight:700;">Sent for approval</span></div>`;
+    } else if (r.actionCode === 'sent_accounts') {
+      actionCell = `<div style="text-align:center;"><span style="font-size:.75rem; color:#1d4ed8; font-weight:700;">Sent to accounts</span></div>`;
+    } else if (r.actionCode === 'completed') {
+      const safeLink = r.pdfLink || r.folderUrl || '#';
+      actionCell = `<div style="text-align:center;"><a href="${escHtml(safeLink)}" target="_blank" class="badge-status status-completed" style="text-decoration:none; padding:5px 12px; font-size:0.75rem;">📄 View PDF</a></div>`;
+    }
+
+    let displayDate = r.date ? String(r.date) : '—';
+
+    return `<tr data-idx="${i}">
+      <td data-label="TXN ID">
+        <div style="font-weight:700; text-align:right;">
+          ${escHtml(r.transactionId)||'—'}
+          ${r.folderUrl && r.actionCode !== 'completed' ? `<br><a href="${escHtml(r.folderUrl)}" target="_blank" rel="noopener noreferrer" style="font-size:.75rem;">Open Folder</a>` : ''}
+        </div>
+      </td>
+      <td data-label="DATE"><div style="text-align:right; font-size:.85rem;">${escHtml(displayDate)}</div></td> 
+      <td data-label="PAID TO"><div style="font-weight:600; text-align:right; white-space:normal; word-break:break-word;">${escHtml(r.recipientName)||'—'}</div></td>
+      <td data-label="NOTES"><div style="text-align:right; white-space:normal; word-break:break-word; font-size:.85rem;">${escHtml(r.notes)||'—'}</div></td>
+      <td data-label="AMOUNT"><div style="font-weight:800; color:#01696f; font-size:1.1rem; text-align:right;">₹${fmtAmt(r.amount)}</div></td>
+      <td data-label="STATUS"><div style="text-align:right;">${statusBadge(r.status)}</div></td>
+      <td data-label="ACTIONS" class="text-center">${actionCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+function applyFilters() {
+  const globalSearch = el('globalFilter') ? el('globalFilter').value.trim().toLowerCase() : '';
+  const nameSearch = el('nameFilter') ? el('nameFilter').value.trim().toLowerCase() : '';
+  const status = el('statusFilter') ? el('statusFilter').value : '';
+  const month = el('monthFilter') ? el('monthFilter').value : '';
+
+  filteredTxns = allTxns.filter(r => {
+    const searchTarget = String(
+      (r.transactionId || '') + ' ' + 
+      (r.recipientName || '') + ' ' + 
+      (r.notes || '') + ' ' + 
+      (r.amount || '')
+    ).toLowerCase();
+
+    const rStat = (!r.status || r.status === '-') ? 'Pending Invoice' : r.status;
+    
+    const okGlobal = !globalSearch || searchTarget.includes(globalSearch);
+    const okName = !nameSearch || String(r.recipientName || '').toLowerCase().includes(nameSearch) || String(r.notes || '').toLowerCase().includes(nameSearch);
+    const okStatus = !status || status === '' || rStat === status;
+    const okMonth = !month || monthLabelFromDateStr(r.date) === month;
+
+    return okGlobal && okName && okStatus && okMonth;
+  });
+
+  filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+  renderTable(filteredTxns);
+}
+
+function clearFilters() {
+  if (el('globalFilter')) el('globalFilter').value = '';
+  if (el('nameFilter')) el('nameFilter').value = '';
+  if (el('statusFilter')) el('statusFilter').value = '';
+  if (el('monthFilter')) el('monthFilter').value = '';
+  
+  filteredTxns = [...allTxns];
+  filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+  renderTable(filteredTxns);
+}
+
+function buildNameOptions() {
+  const dataArray = typeof allTxns !== 'undefined' ? allTxns : [];
+  const names = new Set();
+  dataArray.forEach(r => {
+    if (r.recipientName && r.recipientName !== '—') names.add(String(r.recipientName).trim());
+    if (r.notes && r.notes !== '—') names.add(String(r.notes).trim());
+  });
+
+  const datalist = el('nameOptionsList');
+  if (datalist) {
+    datalist.innerHTML = Array.from(names)
+      .filter(Boolean)
+      .sort()
+      .map(name => `<option value="${escHtml(name)}">`)
+      .join('');
+  }
+}
+
+function bindFilters() {
+  if (el('nameFilter')) el('nameFilter').addEventListener('input', applyFilters);
+  if (el('monthFilter')) el('monthFilter').addEventListener('change', applyFilters);
+  if (el('statusFilter')) el('statusFilter').addEventListener('change', applyFilters);
+  if (el('globalFilter')) el('globalFilter').addEventListener('input', applyFilters);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  bindFilters();
+
+  // ✅ NEW: Initialize the rejection-reason interstitial modal instance
+  if (el('rejectionReasonModal')) {
+    rejectionReasonModal = new bootstrap.Modal(el('rejectionReasonModal'));
+  }
+
+  const savedEmpId = sessionStorage.getItem('employeeEmpId');
+  const savedName  = sessionStorage.getItem('employeeName');
+
+if (savedEmpId) {
+    // Show a loading state while we verify their access hasn't been revoked
+    el('loginSection').style.display = 'none';
+    el('dashboardSection').style.display = 'none';
+    
+    // ✅ NEW BLOCK (Adds Failure Handler & Full Employee Data)
+    apiCall('validateSessionEmployee', { empId: savedEmpId })
+  .then(res => {
+    if (res && res.success) {
+      currentEmployee = { 
+        empId: res.empId, 
+        name: res.name, 
+        department: res.department || '', 
+        approverEmail: res.approverEmail || '', 
+        approverName: res.approverName || '' 
+      };
+      
+      el('empNameDisplay').textContent = res.name;
+      el('empIdDisplay').textContent = `Emp ID: ${res.empId}`;
+      el('dashboardSection').style.display = 'block';
+      
+      loadTransactions(res.empId);
+    } else {
+      handleLogout();
+    }
+  })
+  .catch(err => { 
+    console.error("Session check failed:", err); 
+    handleLogout(); 
+  });
+  } else {
+    // No memory found, show login screen
+    el('loginSection').style.display = 'block';
+    el('dashboardSection').style.display = 'none';
+  }
+});
+
+function handleLogin(event) {
+  sessionStorage.clear();
+  event.preventDefault();
+  clearLoginAlert();
+  const empId = el('empIdInput').value.trim();
+  const password = el('empPasswordInput').value.trim();
+
+  if (!empId) { showLoginAlert('Please enter your Employee ID.'); el('empIdInput').focus(); return; }
+  if (!password) { showLoginAlert('Please enter your password.'); el('empPasswordInput').focus(); return; }
+
+  el('btnLogin').disabled = true;
+  el('loginBtnText').textContent = 'Loading...';
+  el('loginSpinner').style.display = 'inline-block';
+
+  apiCall('validateEmployeeLogin', { empId, password })
+  .then(validLogin => {
+    // 1. Handle Invalid Credentials
+    if (!validLogin || !validLogin.success) {
+      showLoginAlert(validLogin?.message || 'Login failed. Please check credentials and try again.');
+      el('btnLogin').disabled = false;
+      el('loginBtnText').textContent = 'View My Transactions';
+      el('loginSpinner').style.display = 'none';
+      el('empPasswordInput').value = ''; 
+      el('empPasswordInput').focus();
+      return;
+    }
+
+    // 2. Build Session State
+    currentEmployee = { 
+      empId: validLogin.empId, 
+      name: validLogin.name, 
+      department: validLogin.department || '', 
+      approverEmail: validLogin.approverEmail || '', 
+      approverName: validLogin.approverName || '' 
+    };
+    
+    sessionStorage.setItem('employeeEmpId', currentEmployee.empId);
+    sessionStorage.setItem('employeeName', currentEmployee.name);
+    
+    el('empNameDisplay').textContent = currentEmployee.name;
+    el('empIdDisplay').textContent = `Emp ID: ${currentEmployee.empId}`;
+
+    // 3. Nested Call: Fetch Mobile App URL & Setup WebView Bridge
+    apiCall('getVoucherAppUrl')
+      .then(url => {
+        if (url) {
+          window._voucherBaseUrl = url;
+          el('voucherLinkWrap').style.display = 'block';
+          
+          el('voucherLinkBtn').onclick = function(e) {
+            e.preventDefault();
+            if (window.ReactNativeWebView) {
+              window.ReactNativeWebView.postMessage(url);
+            } else {
+              window.open(url, '_blank');
+            }
+          };
+        }
+      })
+      .catch(() => {}); // Fails silently, just like the old code
+
+    // 4. Update UI and Load Data
+    el('loginSection').style.display = 'none';
+    el('dashboardSection').style.display = 'block';
+    loadTransactions(currentEmployee.empId);
+    
+    el('btnLogin').disabled = false;
+    el('loginBtnText').textContent = 'View My Transactions';
+    el('loginSpinner').style.display = 'none';
+  })
+  .catch(err => {
+    // 5. Handle Network/System Errors
+    showLoginAlert(err.message || String(err));
+    el('btnLogin').disabled = false;
+    el('loginBtnText').textContent = 'View My Transactions';
+    el('loginSpinner').style.display = 'none';
+    el('empPasswordInput').value = ''; 
+    el('empPasswordInput').focus();
+  });
+}
+
+function loadTransactions(empId) {
+const isMobileApp = !!window.ReactNativeWebView;
+
+  if (isMobileApp) {
+    // 🔥 MOBILE ONLY: Pull from permanent memory for instant loading
+    const cachedData = localStorage.getItem('permanentTxns_' + empId);
+    if (cachedData) {
+      allTxns = JSON.parse(cachedData);
+      filteredTxns = [...allTxns];
+      filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+      buildMonthOptions(); buildStatusOptions(); buildNameOptions();
+      renderTable(filteredTxns);
+    } else {
+      el('skeletonLoader').style.display = 'block';
+      el('txTableWrap').style.display = 'none';
+      el('emptyState').style.display = 'none';
+    }
+  } else {
+    // 🌐 WEB ONLY: Always show the loading skeleton (Standard behavior)
+    el('skeletonLoader').style.display = 'block';
+    el('txTableWrap').style.display = 'none';
+    el('emptyState').style.display = 'none';
+  }
+
+  // 2. Fetch fresh data from Google Apps Script
+  apiCall('getAllEmployeeTransactions', { empId })
+  .then(txns => {
+    allTxns = txns || [];
+    
+    // Only save to permanent memory if they are using the mobile app
+    if (isMobileApp) {
+      localStorage.setItem('permanentTxns_' + empId, JSON.stringify(allTxns));
+    }
+    
+    filteredTxns = [...allTxns];
+    filteredTxns.sort((a, b) => getStatusOrder(a.status) - getStatusOrder(b.status));
+    
+    el('skeletonLoader').style.display = 'none';
+    
+    buildMonthOptions(); 
+    buildStatusOptions(); 
+    buildNameOptions();
+    renderTable(filteredTxns);
+  })
+  .catch(err => {
+    el('skeletonLoader').style.display = 'none';
+    
+    // Only suppress the error alert on mobile if we already showed them cached data
+    if (!isMobileApp || !localStorage.getItem('permanentTxns_' + empId)) {
+      showDashAlert('Error loading transactions: ' + (err.message || String(err)));
+    }
+  });
+}
+
+function openRejectedVoucherWithPrefill(rid, token) {
+  if (!rid) {
+    alert('Request ID missing. Cannot open voucher.');
+    return;
+  }
+  
+  const baseUrl = window._voucherBaseUrl || window.location.href.split('?')[0];
+
+  sessionStorage.setItem('voucherReturnAction', 'employee');
+  
+  el('fullScreenLoader').style.display = 'flex';
+  
+  // ✅ FIX: Kept your exact variables, just added the required &token to the URL
+  const targetUrl = `${baseUrl}?action=resubmit&rid=${encodeURIComponent(rid)}&token=${encodeURIComponent(token)}`;
+  
+  setTimeout(() => {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'navigate', url: targetUrl }));
+    } else {
+      window.open(targetUrl, '_blank');
+    }
+  }, 100);
+}
+
+apiCall('getVoucherAppUrl').then(url => {
+  if (url) {
+    window._voucherBaseUrl = url;
+    el('voucherLinkWrap').style.display = 'block';
+    el('voucherLinkBtn').onclick = function(e) {
+      e.preventDefault();
+      if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(url);
+      else window.open(url, '_blank');
+    };
+  }
+});
+
+function handleLogout() {
+  sessionStorage.clear();
+  currentEmployee = null;
+  allTxns = [];
+  window._voucherBaseUrl = null;
+  
+  // Safely reloads the current GitHub page to show the login screen instantly and clear URL parameters
+  window.location.reload(); 
+}
+</script>
+</body>
+</html>
