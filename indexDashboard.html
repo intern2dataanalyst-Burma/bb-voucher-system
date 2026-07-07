@@ -187,7 +187,10 @@ async function apiCall(action, payload) {
     body: JSON.stringify({ action, payload })
   });
   if (!response.ok) throw new Error(`Server error (${response.status})`);
-  return await response.json(); // return the raw body — matches what every dashboard already checks (.success, .error, .message, or a raw array)
+
+  const json = await response.json();
+  if (!json.ok) throw new Error(json.error || 'Unknown server error');
+  return json.data; // unwrap the envelope — callers keep working exactly as before
 }
 
   let allVouchers = [];
