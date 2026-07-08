@@ -6,9 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accounts Dashboard — Burma Burma</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script>
-    window.voucherBaseUrl = '<?= VOUCHERBASEURL ?>';
-  </script>
 <style>
   :root { --primary:#01696f; --primary-hover:#0c4e54; --accent:#1d9bf0; --success:#16a34a; --warning:#d97706; --danger:#dc2626; --bg:#f7f6f2; --surface:#fff; --border:#e5e7eb; --text:#111827; --muted:#6b7280; --faint:#d1d5db;}
   body { background: var(--bg); font-family: system-ui,-apple-system,'Segoe UI',sans-serif; color: var(--text); }
@@ -395,7 +392,8 @@
 <script>
   // ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
-
+window.voucherBaseUrl = WEB_APP_URL; 
+  
 async function apiCall(action, payload) {
   const response = await fetch(WEB_APP_URL, {
     method: 'POST',
