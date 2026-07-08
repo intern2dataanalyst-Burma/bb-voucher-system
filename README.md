@@ -3,9 +3,9 @@
 The centralized voucher processing system.
 
 ## Live Dashboards
-* [Employee Dashboard](https://intern2dataanalyst-burma.github.io/bb-voucher-system/employee.html) - Submit and track your vouchers.
-* [Approver Dashboard](https://intern2dataanalyst-burma.github.io/bb-voucher-system/approver.html) - Approve or reject pending requests.
-* [Accounts Dashboard](https://intern2dataanalyst-burma.github.io/bb-voucher-system/accounts.html) - Final processing and PDF generation.
+* [Employee Dashboard](https://intern2dataanalyst-burma.github.io/bb-voucher-system/employeedashboard.html) - Submit and track your vouchers.
+* [Approver Dashboard](https://intern2dataanalyst-burma.github.io/bb-voucher-system/approverdashboard.html) - Approve or reject pending requests.
+* [Accounts Dashboard](https://intern2dataanalyst-burma.github.io/bb-voucher-system/accountsdashboard.html) - Final processing and PDF generation.
 
 ## Troubleshooting
 * **"Loading..." stuck forever:** Ensure the Google Apps Script Web App is deployed with "Anyone" access.
