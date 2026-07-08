@@ -6,10 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Approver Dashboard — Burma Burma</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script>
-  const VOUCHERBASEURL = '<?= VOUCHERBASEURL ?>';
-  window.voucherBaseUrl = VOUCHERBASEURL;
-</script>
 <style>
   :root { 
     --primary:#01696f; 
@@ -597,6 +593,7 @@
 <script>
 // ✅ NEW: Standardized API wrapper — replaces google.script.run for GitHub Pages hosting.
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxQmsFSiEtRt6K6GShxg1P5A0G9g8RICU9qx4AGz3ZwTM4JkGw2cAcZjt-H4ctEIQ8/exec'; // <-- paste your /exec URL here
+window.voucherBaseUrl = WEB_APP_URL;
 
 async function apiCall(action, payload) {
   const response = await fetch(WEB_APP_URL, {
@@ -954,11 +951,9 @@ function handleApprove(idx){
     el('approveBtnText').textContent = 'Approving...';
     el('approveSpinner').style.display = 'inline-block';
 
-   apiCall('updateOmniStatus', { 
-      rowIndex: pendingApproveRow.rowIndex, 
-      action: 'approve', 
-      reason: '', 
-      transactionId: pendingApproveRow.transactionId 
+   apiCall('approveVoucherAjax', {
+      rid: pendingApproveRow.rid,
+      token: pendingApproveRow.token
     })
     .then(res => {
       approveModal.hide();
@@ -1038,11 +1033,10 @@ function setupRejectHandler(){
     el('rejectBtnText').textContent = 'Submitting...';
     el('rejectSpinner').style.display = 'inline-block';
     
-    apiCall('updateOmniStatus', { 
-  rowIndex: pendingRejectRow.rowIndex, 
-  action: 'reject', 
-  reason: reason, 
-  transactionId: pendingRejectRow.transactionId 
+    apiCall('rejectVoucher', {
+  rid: pendingRejectRow.rid,
+  token: pendingRejectRow.token,
+  reason: reason
 })
 .then(res => {
   bootstrap.Modal.getInstance(el('rejectModal')).hide();
